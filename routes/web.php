@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\CampaignController as AdminCampaignController;
 use App\Http\Controllers\Public\ArticleController as PublicArticleController;
 use App\Http\Controllers\Public\CampaignController as PublicCampaignController;
 use App\Models\Campaign;
+use App\Models\Setting;
+use App\Models\Article;
 
 use App\Http\Controllers\Public\DonationController as PublicDonationController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
@@ -17,7 +19,32 @@ Route::get('/', function () {
     $campaigns = Campaign::where('status', 'active')
         ->latest()
         ->get();
-    return view('welcome', compact('campaigns'));
+
+    $popup = [
+        'active' => Setting::get('popup_active', '0') === '1',
+        'type' => Setting::get('popup_type', 'custom_image'),
+        'custom_image' => Setting::get('popup_custom_image'),
+        'link' => Setting::get('popup_link'),
+        'title' => Setting::get('popup_title'),
+        'description' => Setting::get('popup_description'),
+        'data' => null,
+    ];
+
+    if ($popup['active']) {
+        if ($popup['type'] === 'campaign') {
+            $campaignId = Setting::get('popup_campaign_id');
+            if ($campaignId) {
+                $popup['data'] = Campaign::find($campaignId);
+            }
+        } elseif ($popup['type'] === 'article') {
+            $articleId = Setting::get('popup_article_id');
+            if ($articleId) {
+                $popup['data'] = Article::find($articleId);
+            }
+        }
+    }
+
+    return view('welcome', compact('campaigns', 'popup'));
 });
 
 // Public Articles

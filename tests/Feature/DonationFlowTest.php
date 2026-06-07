@@ -128,7 +128,7 @@ class DonationFlowTest extends TestCase
             ->post(route('admin.settings.update'), [
                 'bank_name' => 'BANK NEGARA INDONESIA',
                 'bank_account_number' => '9876-5432-10',
-                'bank_account_name' => 'Yayasan Amal Bisa Kita',
+                'bank_account_name' => 'Yayasan Amal Pedulia',
                 'whatsapp_number' => '6289999999999',
             ]);
 
@@ -138,7 +138,7 @@ class DonationFlowTest extends TestCase
         // Check model values are updated
         $this->assertEquals('BANK NEGARA INDONESIA', \App\Models\Setting::get('bank_name'));
         $this->assertEquals('9876-5432-10', \App\Models\Setting::get('bank_account_number'));
-        $this->assertEquals('Yayasan Amal Bisa Kita', \App\Models\Setting::get('bank_account_name'));
+        $this->assertEquals('Yayasan Amal Pedulia', \App\Models\Setting::get('bank_account_name'));
         $this->assertEquals('6289999999999', \App\Models\Setting::get('whatsapp_number'));
     }
 
@@ -147,7 +147,7 @@ class DonationFlowTest extends TestCase
         // Seed customized settings first
         \App\Models\Setting::set('bank_name', 'MOCK BANK INDONESIA');
         \App\Models\Setting::set('bank_account_number', '123-456-789');
-        \App\Models\Setting::set('bank_account_name', 'Bisa Kita Mock Account');
+        \App\Models\Setting::set('bank_account_name', 'Pedulia Mock Account');
         \App\Models\Setting::set('whatsapp_number', '628111222333');
 
         $donation = Donation::create([
@@ -166,7 +166,7 @@ class DonationFlowTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('MOCK BANK INDONESIA');
         $response->assertSee('123-456-789');
-        $response->assertSee('Bisa Kita Mock Account');
+        $response->assertSee('Pedulia Mock Account');
         $response->assertSee('628111222333');
     }
 
@@ -240,5 +240,43 @@ class DonationFlowTest extends TestCase
         // Access campaign page, comment should be gone
         $response2 = $this->get(route('campaigns.show', $this->campaign->slug));
         $response2->assertDontSee('Komentar tidak pantas di sini');
+    }
+
+    public function test_admin_can_update_popup_settings()
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.settings.update'), [
+                'bank_name' => 'BANK NEGARA INDONESIA',
+                'bank_account_number' => '9876-5432-10',
+                'bank_account_name' => 'Yayasan Amal Pedulia',
+                'whatsapp_number' => '6289999999999',
+                'popup_active' => '1',
+                'popup_type' => 'campaign',
+                'popup_campaign_id' => $this->campaign->id,
+                'popup_title' => 'Pop-up Test Kampanye',
+                'popup_description' => 'Deskripsi kampanye uji coba',
+            ]);
+
+        $response->assertRedirect(route('admin.settings.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertEquals('1', \App\Models\Setting::get('popup_active'));
+        $this->assertEquals('campaign', \App\Models\Setting::get('popup_type'));
+        $this->assertEquals($this->campaign->id, \App\Models\Setting::get('popup_campaign_id'));
+        $this->assertEquals('Pop-up Test Kampanye', \App\Models\Setting::get('popup_title'));
+        $this->assertEquals('Deskripsi kampanye uji coba', \App\Models\Setting::get('popup_description'));
+    }
+
+    public function test_welcome_popup_renders_on_homepage()
+    {
+        \App\Models\Setting::set('popup_active', '1');
+        \App\Models\Setting::set('popup_type', 'campaign');
+        \App\Models\Setting::set('popup_campaign_id', $this->campaign->id);
+        \App\Models\Setting::set('popup_title', 'Donasi Pendidikan');
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('Donasi Pendidikan');
+        $response->assertSee($this->campaign->title);
     }
 }

@@ -500,6 +500,100 @@
             </div>
         </section>
 
+        @if(isset($popup) && $popup['active'])
+        <!-- Welcome Pop-up Modal -->
+        <div id="welcome-popup-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+            <!-- Backdrop -->
+            <div id="welcome-popup-backdrop" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
+            
+            <!-- Modal Content Box -->
+            <div id="welcome-popup-box" class="relative bg-white border border-slate-100 rounded-3xl shadow-2xl overflow-hidden max-w-lg w-full transform scale-95 opacity-0 transition-all duration-300 z-10 p-6 space-y-4">
+                
+                <!-- Close Button -->
+                <button id="close-popup-btn" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-all cursor-pointer z-20">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <!-- Custom Overridden Title & Description (if provided) -->
+                @if(!empty($popup['title']))
+                    <div class="text-center pt-2">
+                        <h2 class="text-base font-black text-charcoal tracking-tight">{{ $popup['title'] }}</h2>
+                        @if(!empty($popup['description']))
+                            <p class="text-[11px] text-slate-400 font-semibold mt-1">{{ $popup['description'] }}</p>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="w-full">
+                    @if($popup['type'] === 'custom_image')
+                        @if(!empty($popup['custom_image']))
+                            @if(!empty($popup['link']))
+                                <a href="{{ $popup['link'] }}" target="_blank" class="block hover:opacity-95 transition-opacity">
+                            @endif
+                                <img src="{{ $popup['custom_image'] }}" alt="{{ $popup['title'] ?? 'Welcome to Pedulia' }}" class="w-full aspect-video object-cover rounded-2xl shadow-sm">
+                            @if(!empty($popup['link']))
+                                </a>
+                            @endif
+                        @endif
+
+                    @elseif($popup['type'] === 'campaign' && $popup['data'])
+                        <div class="space-y-4">
+                            @if(empty($popup['title']))
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold tracking-wider uppercase">Kampanye Pilihan</span>
+                                </div>
+                            @endif
+                            <img src="{{ $popup['data']->thumbnail }}" alt="{{ $popup['data']->title }}" class="w-full aspect-video object-cover rounded-2xl shadow-sm">
+                            <div class="space-y-2">
+                                <h3 class="text-base font-black text-charcoal leading-tight">{{ $popup['data']->title }}</h3>
+                                <div class="text-xs text-slate-400 font-medium line-clamp-3">
+                                    {!! strip_tags($popup['data']->description) !!}
+                                </div>
+                            </div>
+                            <div class="pt-2">
+                                <a href="{{ route('campaigns.show', $popup['data']->slug) }}" class="block w-full py-3 bg-primary text-charcoal font-bold text-center rounded-xl text-xs shadow-md hover:bg-primary-hover transition-all">
+                                    Lihat Kampanye & Donasi
+                                </a>
+                            </div>
+                        </div>
+
+                    @elseif($popup['type'] === 'article' && $popup['data'])
+                        <div class="space-y-4">
+                            @if(empty($popup['title']))
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold tracking-wider uppercase">Artikel Edukasi</span>
+                                </div>
+                            @endif
+                            <img src="{{ $popup['data']->thumbnail }}" alt="{{ $popup['data']->title }}" class="w-full aspect-video object-cover rounded-2xl shadow-sm">
+                            <div class="space-y-2">
+                                <h3 class="text-base font-black text-charcoal leading-tight">{{ $popup['data']->title }}</h3>
+                                <div class="text-xs text-slate-400 font-medium line-clamp-3">
+                                    {!! strip_tags($popup['data']->content) !!}
+                                </div>
+                            </div>
+                            <div class="pt-2">
+                                <a href="{{ route('articles.show', $popup['data']->slug) }}" class="block w-full py-3 bg-primary text-charcoal font-bold text-center rounded-xl text-xs shadow-md hover:bg-primary-hover transition-all">
+                                    Baca Selengkapnya
+                                </a>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Footer / Opt-out Option -->
+                <div class="pt-2 flex items-center justify-between border-t border-slate-50 text-[11px] text-slate-400 font-semibold">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="dont-show-again-checkbox" class="h-3.5 w-3.5 text-primary border-slate-200 rounded focus:ring-primary">
+                        <span>Jangan tampilkan lagi</span>
+                    </label>
+                    <button id="close-popup-text-btn" class="text-charcoal-light hover:underline font-bold">Tutup</button>
+                </div>
+            </div>
+        </div>
+        @endif
+
 @endsection
 
 @push('scripts')
@@ -595,6 +689,53 @@
                 const activeBtn = document.querySelector('.filter-btn.active');
                 if (activeBtn) {
                     activeBtn.classList.add('bg-primary', 'text-charcoal', 'border-primary');
+                }
+
+                // Welcome Pop-up Logic
+                const popupModal = document.getElementById('welcome-popup-modal');
+                const popupBackdrop = document.getElementById('welcome-popup-backdrop');
+                const popupBox = document.getElementById('welcome-popup-box');
+                
+                if (popupModal && popupBackdrop && popupBox) {
+                    // Check if user already opted out
+                    const hasSeen = localStorage.getItem('hasSeenWelcomePopup');
+                    
+                    if (!hasSeen) {
+                        // Show modal with animation
+                        setTimeout(() => {
+                            popupModal.classList.remove('pointer-events-none');
+                            popupModal.classList.add('opacity-100');
+                            
+                            popupBackdrop.classList.remove('opacity-0');
+                            popupBackdrop.classList.add('opacity-100');
+                            
+                            popupBox.classList.remove('scale-95', 'opacity-0');
+                            popupBox.classList.add('scale-100', 'opacity-100');
+                        }, 800); // Slight delay for premium feel
+                    }
+
+                    // Close functions
+                    const closePopup = () => {
+                        const dontShowAgain = document.getElementById('dont-show-again-checkbox');
+                        if (dontShowAgain && dontShowAgain.checked) {
+                            localStorage.setItem('hasSeenWelcomePopup', 'true');
+                        }
+                        
+                        // Animate out
+                        popupBox.classList.remove('scale-100', 'opacity-100');
+                        popupBox.classList.add('scale-95', 'opacity-0');
+                        
+                        popupBackdrop.classList.remove('opacity-100');
+                        popupBackdrop.classList.add('opacity-0');
+                        
+                        popupModal.classList.remove('opacity-100');
+                        popupModal.classList.add('pointer-events-none');
+                    };
+
+                    // Event Listeners
+                    document.getElementById('close-popup-btn').addEventListener('click', closePopup);
+                    document.getElementById('close-popup-text-btn').addEventListener('click', closePopup);
+                    popupBackdrop.addEventListener('click', closePopup);
                 }
             });
         </script>

@@ -106,6 +106,89 @@
             </div>
         </div>
 
+        <!-- Pop-up Welcome Setting Section -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start border-t border-slate-100 pt-8">
+            <div class="md:col-span-4 space-y-1">
+                <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider">Pop-up Selamat Datang</h3>
+                <p class="text-[11px] text-slate-400 font-semibold leading-relaxed">Kelola pop-up promo/pengumuman yang muncul saat donatur pertama kali berkunjung ke beranda.</p>
+            </div>
+            
+            <div class="md:col-span-8 space-y-6">
+                <!-- Checkbox Active -->
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" name="popup_active" id="popup_active" value="1" {{ old('popup_active', $settings['popup_active']) === '1' ? 'checked' : '' }} class="h-4 w-4 text-primary border-slate-300 rounded focus:ring-primary">
+                    <label for="popup_active" class="text-xs font-bold text-charcoal cursor-pointer">Aktifkan Pop-up Selamat Datang</label>
+                </div>
+
+                <!-- Popup Configuration (Only relevant if active) -->
+                <div id="popup-config-container" class="space-y-4 pt-2 {{ old('popup_active', $settings['popup_active']) === '1' ? '' : 'hidden' }}">
+                    <!-- Type Selection -->
+                    <div class="space-y-1.5">
+                        <label for="popup_type" class="text-xs font-bold text-charcoal">Tipe Konten Pop-up</label>
+                        <select name="popup_type" id="popup_type" onchange="togglePopupTypeFields(this.value)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                            <option value="custom_image" {{ old('popup_type', $settings['popup_type']) === 'custom_image' ? 'selected' : '' }}>Gambar Kustom</option>
+                            <option value="campaign" {{ old('popup_type', $settings['popup_type']) === 'campaign' ? 'selected' : '' }}>Postingan Kampanye</option>
+                            <option value="article" {{ old('popup_type', $settings['popup_type']) === 'article' ? 'selected' : '' }}>Artikel Edukasi</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Image Fields -->
+                    <div id="popup-custom-image-fields" class="space-y-4 popup-type-fields">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-36 h-36 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 p-1 flex-shrink-0 shadow-inner flex items-center justify-center">
+                                <img id="popup-image-preview" src="{{ $settings['popup_custom_image'] ?: '/images/hero.png' }}" alt="Popup Image Preview" class="w-full h-full object-contain">
+                            </div>
+                            <div class="space-y-2">
+                                <label for="popup_custom_image" class="block text-xs font-bold text-charcoal">Upload Gambar Pop-up Kustom</label>
+                                <input type="file" name="popup_custom_image" id="popup_custom_image" onchange="previewPopupImage(this)" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-charcoal-light hover:file:bg-primary/20 file:cursor-pointer">
+                                <span class="block text-[10px] text-slate-400 font-semibold">Format yang didukung: JPG, PNG, JPEG, SVG. Maks 2MB.</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="popup_link" class="text-xs font-bold text-charcoal">URL Link Tujuan (Opsional)</label>
+                            <input type="text" name="popup_link" id="popup_link" value="{{ old('popup_link', $settings['popup_link']) }}" placeholder="Contoh: https://pedulia.com/campaigns/target" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Campaign Selection Fields -->
+                    <div id="popup-campaign-fields" class="space-y-1.5 popup-type-fields hidden">
+                        <label for="popup_campaign_id" class="text-xs font-bold text-charcoal">Pilih Kampanye</label>
+                        <select name="popup_campaign_id" id="popup_campaign_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                            <option value="">-- Pilih Kampanye --</option>
+                            @foreach($campaigns as $camp)
+                                <option value="{{ $camp->id }}" {{ old('popup_campaign_id', $settings['popup_campaign_id']) == $camp->id ? 'selected' : '' }}>{{ $camp->title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Article Selection Fields -->
+                    <div id="popup-article-fields" class="space-y-1.5 popup-type-fields hidden">
+                        <label for="popup_article_id" class="text-xs font-bold text-charcoal">Pilih Artikel</label>
+                        <select name="popup_article_id" id="popup_article_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                            <option value="">-- Pilih Artikel --</option>
+                            @foreach($articles as $art)
+                                <option value="{{ $art->id }}" {{ old('popup_article_id', $settings['popup_article_id']) == $art->id ? 'selected' : '' }}>{{ $art->title }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Title & Description (Optional overrides) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label for="popup_title" class="text-xs font-bold text-charcoal">Judul Pop-up (Opsional)</label>
+                            <input type="text" name="popup_title" id="popup_title" value="{{ old('popup_title', $settings['popup_title']) }}" placeholder="Contoh: Promo Ramadhan Berkah" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="popup_description" class="text-xs font-bold text-charcoal">Deskripsi Pop-up (Opsional)</label>
+                            <input type="text" name="popup_description" id="popup_description" value="{{ old('popup_description', $settings['popup_description']) }}" placeholder="Contoh: Dapatkan diskon/penyaluran berlipat" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Form Actions -->
         <div class="pt-6 border-t border-slate-100 flex items-center justify-end">
             <button type="submit" class="px-8 py-3.5 bg-primary text-charcoal font-bold rounded-xl text-xs shadow-[0_4px_12px_rgba(159,239,0,0.3)] hover:bg-primary-hover hover:shadow-[0_6px_16px_rgba(159,239,0,0.5)] transition-all cursor-pointer">
@@ -127,5 +210,53 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    function previewPopupImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('popup-image-preview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function togglePopupTypeFields(type) {
+        // Hide all
+        document.querySelectorAll('.popup-type-fields').forEach(function(el) {
+            el.classList.add('hidden');
+        });
+
+        // Show selected
+        if (type === 'custom_image') {
+            document.getElementById('popup-custom-image-fields').classList.remove('hidden');
+        } else if (type === 'campaign') {
+            document.getElementById('popup-campaign-fields').classList.remove('hidden');
+        } else if (type === 'article') {
+            document.getElementById('popup-article-fields').classList.remove('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Active checkbox toggle
+        var activeCheckbox = document.getElementById('popup_active');
+        var container = document.getElementById('popup-config-container');
+        
+        if (activeCheckbox && container) {
+            activeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
+            });
+        }
+
+        // Initialize type fields visibility
+        var popupTypeSelect = document.getElementById('popup_type');
+        if (popupTypeSelect) {
+            togglePopupTypeFields(popupTypeSelect.value);
+        }
+    });
 </script>
 @endpush
