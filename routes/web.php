@@ -14,6 +14,7 @@ use App\Models\Article;
 use App\Http\Controllers\Public\DonationController as PublicDonationController;
 use App\Http\Controllers\Admin\DonationController as AdminDonationController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\PaymentMethodController as AdminPaymentMethodController;
 
 Route::get('/', function () {
     $campaigns = Campaign::where('status', 'active')
@@ -52,7 +53,9 @@ Route::get('/articles', [PublicArticleController::class, 'index'])->name('articl
 Route::get('/articles/{slug}', [PublicArticleController::class, 'show'])->name('articles.show');
 
 // Public Campaigns
+Route::get('/campaigns', [PublicCampaignController::class, 'index'])->name('campaigns.index');
 Route::get('/campaigns/{slug}', [PublicCampaignController::class, 'show'])->name('campaigns.show');
+Route::get('/campaigns/{slug}/donate', [PublicDonationController::class, 'create'])->name('campaigns.donate.create');
 Route::post('/campaigns/{slug}/donate', [PublicDonationController::class, 'store'])->name('campaigns.donate');
 Route::get('/donations/{invoice_number}', [PublicDonationController::class, 'show'])->name('donations.invoice');
 
@@ -73,6 +76,9 @@ Route::middleware('auth')->group(function () {
 
         // Campaigns CRUD Resources
         Route::resource('campaigns', AdminCampaignController::class);
+
+        // Payment Methods CRUD Resources
+        Route::resource('payment-methods', AdminPaymentMethodController::class);
 
         // Donations Management
         Route::get('/donations', [AdminDonationController::class, 'index'])->name('donations.index');

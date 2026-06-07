@@ -49,6 +49,6 @@ class CampaignTest extends TestCase
         $response = $this->get('/campaigns/detail-campaign-view');
         $response->assertStatus(200);
         $response->assertSee('Detail Campaign View');
-        $response->assertSee('Rp 25.000');
+        $response->assertSee('Donasi Sekarang');
     }
 }

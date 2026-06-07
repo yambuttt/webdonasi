@@ -40,14 +40,14 @@
             <div class="space-y-4">
                 <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider text-left border-b border-slate-100 pb-2">Instruksi Pembayaran</h3>
                 
-                @if($donation->payment_method === 'qris')
+                @if(($paymentMethod && $paymentMethod->type === 'qris') || $donation->payment_method === 'qris')
                     <!-- QRIS Instructions -->
                     <div class="flex flex-col items-center space-y-4">
                         <div class="w-64 h-64 border border-slate-200 rounded-2xl overflow-hidden bg-white p-2 shadow-inner">
-                            <img src="{{ App\Models\Setting::get('qris_image', '/images/qris.png') }}" alt="QRIS Barcode" class="w-full h-full object-contain">
+                            <img src="{{ $paymentMethod ? $paymentMethod->qris_image : App\Models\Setting::get('qris_image', '/images/qris.png') }}" alt="QRIS Barcode" class="w-full h-full object-contain">
                         </div>
                         <div class="text-left text-xs font-semibold text-slate-500 leading-relaxed space-y-2 max-w-md">
-                            <p class="font-bold text-charcoal text-center text-sm">Scan QRIS Pedulia</p>
+                            <p class="font-bold text-charcoal text-center text-sm">Scan QRIS {{ $paymentMethod ? $paymentMethod->name : 'Pedulia' }}</p>
                             <ol class="list-decimal pl-5 space-y-1">
                                 <li>Buka aplikasi dompet digital Anda (GoPay, OVO, Dana, LinkAja, ShopeePay, BCA Mobile, dll).</li>
                                 <li>Pilih menu scan/bayar lalu scan barcode di atas.</li>
@@ -57,29 +57,29 @@
                         </div>
                     </div>
                 @else
-                    <!-- Nobu Bank Instructions -->
+                    <!-- Transfer Bank Instructions -->
                     <div class="space-y-4 text-left">
                         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-3">
                             <div class="flex justify-between items-center text-xs border-b border-slate-200/50 pb-2">
                                 <span class="text-slate-400 font-bold">Bank Penerima</span>
-                                <span class="text-charcoal font-black uppercase text-sm">{{ App\Models\Setting::get('bank_name', 'NOBU BANK') }}</span>
+                                <span class="text-charcoal font-black uppercase text-sm">{{ $paymentMethod ? $paymentMethod->bank_name : App\Models\Setting::get('bank_name', 'NOBU BANK') }}</span>
                             </div>
                             <div class="flex justify-between items-center text-xs border-b border-slate-200/50 pb-2">
                                 <span class="text-slate-400 font-bold">Nomor Rekening</span>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-charcoal font-black text-sm tracking-wider">{{ App\Models\Setting::get('bank_account_number', '1031-0988-1234') }}</span>
+                                    <span class="text-charcoal font-black text-sm tracking-wider">{{ $paymentMethod ? $paymentMethod->bank_account_number : App\Models\Setting::get('bank_account_number', '1031-0988-1234') }}</span>
                                 </div>
                             </div>
                             <div class="flex justify-between items-center text-xs pb-1">
                                 <span class="text-slate-400 font-bold">Nama Rekening</span>
-                                <span class="text-charcoal font-black text-sm">{{ App\Models\Setting::get('bank_account_name', 'Yayasan Pedulia') }}</span>
+                                <span class="text-charcoal font-black text-sm">{{ $paymentMethod ? $paymentMethod->bank_account_name : App\Models\Setting::get('bank_account_name', 'Yayasan Pedulia') }}</span>
                             </div>
                         </div>
 
                         <div class="text-xs font-semibold text-slate-500 leading-relaxed space-y-2">
                             <p class="font-bold text-charcoal">Petunjuk Transfer Bank:</p>
                             <ol class="list-decimal pl-5 space-y-1">
-                                <li>Lakukan transfer ATM, Mobile Banking, atau Internet Banking ke rekening {{ App\Models\Setting::get('bank_name', 'NOBU BANK') }} di atas.</li>
+                                <li>Lakukan transfer ATM, Mobile Banking, atau Internet Banking ke rekening {{ $paymentMethod ? $paymentMethod->bank_name : App\Models\Setting::get('bank_name', 'NOBU BANK') }} di atas.</li>
                                 <li>Pastikan jumlah transfer sama persis dengan nominal wajib transfer: <strong class="text-charcoal font-black text-sm">Rp {{ number_format($donation->total_amount, 0, ',', '.') }}</strong>.</li>
                                 <li>Simpan bukti transfer sebagai bukti sah pembayaran Anda.</li>
                             </ol>
@@ -116,7 +116,7 @@
                     </div>
                     <div class="flex justify-between py-1">
                         <span class="text-slate-400 font-bold">Metode Pembayaran:</span>
-                        <span class="text-charcoal font-extrabold uppercase bg-slate-100 px-2 py-0.5 rounded text-[10px]">{{ $donation->payment_method === 'qris' ? 'QRIS Statis' : 'Transfer Bank' }}</span>
+                        <span class="text-charcoal font-extrabold bg-slate-100 px-2 py-0.5 rounded text-[10px]">{{ $paymentMethod ? $paymentMethod->name : ($donation->payment_method === 'qris' ? 'QRIS Statis' : 'Transfer Bank') }}</span>
                     </div>
                 </div>
             </div>

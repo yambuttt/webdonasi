@@ -44,7 +44,7 @@
 
                     <!-- Desktop Navigation Links -->
                     <nav class="hidden md:flex space-x-8 text-sm font-semibold text-charcoal-light">
-                        <a href="{{ request()->is('/') ? '#kampanye' : '/#kampanye' }}" class="hover:text-charcoal transition-colors py-2">Kampanye</a>
+                        <a href="{{ route('campaigns.index') }}" class="hover:text-charcoal transition-colors py-2 {{ request()->routeIs('campaigns.*') ? 'text-charcoal font-bold border-b-2 border-primary' : '' }}">Kampanye</a>
                         <a href="{{ route('articles.index') }}" class="hover:text-charcoal transition-colors py-2 {{ request()->routeIs('articles.*') ? 'text-charcoal font-bold border-b-2 border-primary' : '' }}">Artikel</a>
                         <a href="{{ request()->is('/') ? '#cara-kerja' : '/#cara-kerja' }}" class="hover:text-charcoal transition-colors py-2">Cara Kerja</a>
                         <a href="{{ request()->is('/') ? '#keunggulan' : '/#keunggulan' }}" class="hover:text-charcoal transition-colors py-2">Mengapa Kami</a>
@@ -63,7 +63,7 @@
                             </form>
                         @else
                             <a href="/login" class="text-sm font-semibold text-charcoal hover:text-charcoal-light transition-colors">Masuk</a>
-                            <a href="{{ request()->is('/') ? '#kampanye' : '/#kampanye' }}" class="px-5 py-2.5 text-sm font-bold bg-primary text-charcoal rounded-full border border-primary hover:bg-primary-hover hover:border-primary-hover transition-all duration-300 shadow-[0_4px_14px_rgba(159,239,0,0.3)] hover:shadow-[0_6px_20px_rgba(159,239,0,0.55)]">
+                            <a href="{{ route('campaigns.index') }}" class="px-5 py-2.5 text-sm font-bold bg-primary text-charcoal rounded-full border border-primary hover:bg-primary-hover hover:border-primary-hover transition-all duration-300 shadow-[0_4px_14px_rgba(159,239,0,0.3)] hover:shadow-[0_6px_20px_rgba(159,239,0,0.55)]">
                                 Donasi Sekarang
                             </a>
                         @endauth
@@ -87,7 +87,7 @@
             <!-- Mobile Navigation Drawer -->
             <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-100 transition-all duration-300">
                 <div class="px-4 pt-2 pb-6 space-y-3 sm:px-6">
-                    <a href="{{ request()->is('/') ? '#kampanye' : '/#kampanye' }}" class="block px-3 py-2.5 rounded-md text-base font-semibold text-charcoal-light hover:bg-slate-50 hover:text-charcoal transition-colors">Kampanye</a>
+                    <a href="{{ route('campaigns.index') }}" class="block px-3 py-2.5 rounded-md text-base font-semibold text-charcoal-light hover:bg-slate-50 hover:text-charcoal transition-colors {{ request()->routeIs('campaigns.*') ? 'text-charcoal font-bold' : '' }}">Kampanye</a>
                     <a href="{{ route('articles.index') }}" class="block px-3 py-2.5 rounded-md text-base font-semibold text-charcoal-light hover:bg-slate-50 hover:text-charcoal transition-colors">Artikel</a>
                     <a href="{{ request()->is('/') ? '#cara-kerja' : '/#cara-kerja' }}" class="block px-3 py-2.5 rounded-md text-base font-semibold text-charcoal-light hover:bg-slate-50 hover:text-charcoal transition-colors">Cara Kerja</a>
                     <a href="{{ request()->is('/') ? '#keunggulan' : '/#keunggulan' }}" class="block px-3 py-2.5 rounded-md text-base font-semibold text-charcoal-light hover:bg-slate-50 hover:text-charcoal transition-colors">Mengapa Kami</a>
@@ -104,7 +104,7 @@
                             </form>
                         @else
                             <a href="/login" class="w-full text-center py-2.5 rounded-md text-base font-semibold text-charcoal hover:bg-slate-50 transition-colors">Masuk</a>
-                            <a href="{{ request()->is('/') ? '#kampanye' : '/#kampanye' }}" class="w-full text-center py-3 bg-primary text-charcoal rounded-full font-bold text-base shadow-[0_4px_12px_rgba(159,239,0,0.35)] transition-all">
+                            <a href="{{ route('campaigns.index') }}" class="w-full text-center py-3 bg-primary text-charcoal rounded-full font-bold text-base shadow-[0_4px_12px_rgba(159,239,0,0.35)] transition-all">
                                 Donasi Sekarang
                             </a>
                         @endauth
@@ -155,7 +155,7 @@
                     <div class="md:col-span-3 space-y-3">
                         <h4 class="text-sm font-bold text-charcoal uppercase tracking-wider">Navigasi</h4>
                         <ul class="space-y-2 text-sm text-charcoal-lighter font-medium">
-                            <li><a href="{{ request()->is('/') ? '#kampanye' : '/#kampanye' }}" class="hover:text-charcoal transition-colors">Kampanye Pilihan</a></li>
+                            <li><a href="{{ route('campaigns.index') }}" class="hover:text-charcoal transition-colors">Kampanye Pilihan</a></li>
                             <li><a href="{{ request()->is('/') ? '#cara-kerja' : '/#cara-kerja' }}" class="hover:text-charcoal transition-colors">Cara Kerja Donasi</a></li>
                             <li><a href="{{ request()->is('/') ? '#keunggulan' : '/#keunggulan' }}" class="hover:text-charcoal transition-colors">Keunggulan Platform</a></li>
                             <li><a href="{{ request()->is('/') ? '#testimoni' : '/#testimoni' }}" class="hover:text-charcoal transition-colors">Testimoni Sukses</a></li>

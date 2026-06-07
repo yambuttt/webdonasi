@@ -11,6 +11,16 @@ use Illuminate\Support\Str;
 class DonationController extends Controller
 {
     /**
+     * Show the form for creating a new donation.
+     */
+    public function create($slug)
+    {
+        $campaign = Campaign::where('slug', $slug)->where('status', 'active')->firstOrFail();
+        $paymentMethods = \App\Models\PaymentMethod::where('status', true)->get();
+        return view('campaigns.donate', compact('campaign', 'paymentMethods'));
+    }
+
+    /**
      * Store a newly created donation in storage.
      */
     public function store(Request $request, $slug)
@@ -19,7 +29,7 @@ class DonationController extends Controller
 
         $request->validate([
             'nominal' => 'required|integer|min:10000',
-            'payment_method' => 'required|in:qris,bank_nobu',
+            'payment_method' => 'required|exists:payment_methods,code',
             'donor_name' => 'required|string|max:100',
             'donor_email' => 'required|email|max:100',
             'comment' => 'nullable|string|max:1000',
@@ -57,6 +67,7 @@ class DonationController extends Controller
     public function show($invoiceNumber)
     {
         $donation = Donation::with('campaign')->where('invoice_number', $invoiceNumber)->firstOrFail();
-        return view('donations.invoice', compact('donation'));
+        $paymentMethod = \App\Models\PaymentMethod::where('code', $donation->payment_method)->first();
+        return view('donations.invoice', compact('donation', 'paymentMethod'));
     }
 }

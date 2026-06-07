@@ -35,7 +35,7 @@
                         </p>
 
                         <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
-                            <a href="#kampanye" class="w-full sm:w-auto px-8 py-4 bg-primary text-charcoal text-center rounded-full font-extrabold text-base shadow-[0_6px_20px_rgba(159,239,0,0.35)] hover:bg-primary-hover hover:shadow-[0_8px_24px_rgba(159,239,0,0.5)] transition-all duration-300 transform hover:-translate-y-0.5">
+                            <a href="{{ route('campaigns.index') }}" class="w-full sm:w-auto px-8 py-4 bg-primary text-charcoal text-center rounded-full font-extrabold text-base shadow-[0_6px_20px_rgba(159,239,0,0.35)] hover:bg-primary-hover hover:shadow-[0_8px_24px_rgba(159,239,0,0.5)] transition-all duration-300 transform hover:-translate-y-0.5">
                                 Mulai Berdonasi
                             </a>
                             <a href="#cara-kerja" class="w-full sm:w-auto px-8 py-4 bg-white text-charcoal text-center rounded-full font-bold text-base border border-slate-200 hover:bg-slate-50 transition-all duration-300">
@@ -490,7 +490,7 @@
                     Setiap bantuan kecil dari Anda sangat berharga bagi masa depan dan kesembuhan mereka. Salurkan bantuan sekarang juga.
                 </p>
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                    <a href="#kampanye" class="w-full sm:w-auto px-8 py-4 bg-primary text-charcoal rounded-full font-extrabold text-base shadow-[0_6px_20px_rgba(159,239,0,0.35)] hover:bg-primary-hover hover:shadow-[0_8px_24px_rgba(159,239,0,0.5)] transition-all duration-300 transform hover:-translate-y-0.5">
+                    <a href="{{ route('campaigns.index') }}" class="w-full sm:w-auto px-8 py-4 bg-primary text-charcoal rounded-full font-extrabold text-base shadow-[0_6px_20px_rgba(159,239,0,0.35)] hover:bg-primary-hover hover:shadow-[0_8px_24px_rgba(159,239,0,0.5)] transition-all duration-300 transform hover:-translate-y-0.5">
                         Donasi Sekarang
                     </a>
                     <a href="#" class="w-full sm:w-auto px-8 py-4 bg-slate-800 text-white rounded-full font-bold text-base hover:bg-slate-700 transition-all duration-300">

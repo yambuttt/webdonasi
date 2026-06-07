@@ -28,6 +28,8 @@ class SettingController extends Controller
             'popup_link' => Setting::get('popup_link'),
             'popup_title' => Setting::get('popup_title'),
             'popup_description' => Setting::get('popup_description'),
+            'carousel_source' => Setting::get('carousel_source', 'latest'),
+            'carousel_campaign_ids' => json_decode(Setting::get('carousel_campaign_ids', '[]'), true),
         ];
 
         $campaigns = \App\Models\Campaign::latest()->get();
@@ -56,6 +58,9 @@ class SettingController extends Controller
             'popup_link' => 'nullable|url|max:255',
             'popup_title' => 'nullable|string|max:255',
             'popup_description' => 'nullable|string|max:1000',
+            'carousel_source' => 'nullable|in:latest,custom',
+            'carousel_campaign_ids' => 'required_if:carousel_source,custom|array',
+            'carousel_campaign_ids.*' => 'exists:campaigns,id',
         ], [
             'qris_image.image' => 'File QRIS harus berupa gambar.',
             'qris_image.mimes' => 'Format gambar QRIS wajib jpeg, png, jpg, atau svg.',
@@ -71,6 +76,7 @@ class SettingController extends Controller
             'popup_custom_image.mimes' => 'Format gambar pop-up wajib jpeg, png, jpg, atau svg.',
             'popup_custom_image.max' => 'Ukuran gambar pop-up tidak boleh melebihi 2MB.',
             'popup_link.url' => 'Format link pop-up kustom harus berupa URL yang valid.',
+            'carousel_campaign_ids.required_if' => 'Kampanye wajib dipilih jika sumber slideshow diatur ke Pilihan Admin.',
         ]);
 
         // Process QRIS Image upload if present
@@ -106,6 +112,16 @@ class SettingController extends Controller
         Setting::set('popup_link', $request->input('popup_link'));
         Setting::set('popup_title', $request->input('popup_title'));
         Setting::set('popup_description', $request->input('popup_description'));
+        
+        // Save slideshow configurations
+        if ($request->has('carousel_source')) {
+            Setting::set('carousel_source', $request->input('carousel_source', 'latest'));
+            if ($request->input('carousel_source') === 'custom') {
+                Setting::set('carousel_campaign_ids', json_encode($request->input('carousel_campaign_ids', [])));
+            } else {
+                Setting::set('carousel_campaign_ids', json_encode([]));
+            }
+        }
 
         return redirect()->route('admin.settings.index')->with('success', 'Pengaturan sistem berhasil diperbarui.');
     }

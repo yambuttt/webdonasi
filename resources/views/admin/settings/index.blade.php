@@ -188,6 +188,49 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Slideshow Setting Section -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start border-t border-slate-100 pt-8">
+            <div class="md:col-span-4 space-y-1">
+                <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider">Slideshow Halaman Donasi</h3>
+                <p class="text-[11px] text-slate-400 font-semibold leading-relaxed">Pilih kampanye yang akan ditampilkan pada slideshow di bagian atas halaman daftar kampanye donasi.</p>
+            </div>
+            
+            <div class="md:col-span-8 space-y-6">
+                <!-- Source Selection -->
+                <div class="space-y-1.5">
+                    <label for="carousel_source" class="text-xs font-bold text-charcoal">Sumber Kampanye Slideshow</label>
+                    <select name="carousel_source" id="carousel_source" onchange="toggleCarouselSourceFields(this.value)" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                        <option value="latest" {{ old('carousel_source', $settings['carousel_source']) === 'latest' ? 'selected' : '' }}>4 Kampanye Terbaru</option>
+                        <option value="custom" {{ old('carousel_source', $settings['carousel_source']) === 'custom' ? 'selected' : '' }}>Pilihan Admin (Pilih Manual)</option>
+                    </select>
+                </div>
+
+                <!-- Custom Campaigns Checklist (Show if source is custom) -->
+                <div id="carousel-custom-fields" class="space-y-3 pt-2 {{ old('carousel_source', $settings['carousel_source']) === 'custom' ? '' : 'hidden' }}">
+                    <label class="text-xs font-bold text-charcoal block">Pilih Kampanye yang Ditampilkan</label>
+                    <div class="max-h-60 overflow-y-auto border border-slate-100 rounded-2xl p-4 bg-slate-50/50 space-y-3">
+                        @foreach($campaigns as $camp)
+                        <label class="flex items-center space-x-3.5 p-2 bg-white rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-50/50 transition-all">
+                            <input type="checkbox" name="carousel_campaign_ids[]" value="{{ $camp->id }}" 
+                                {{ in_array($camp->id, old('carousel_campaign_ids', $settings['carousel_campaign_ids'] ?? [])) ? 'checked' : '' }}
+                                class="h-4 w-4 text-primary border-slate-300 rounded focus:ring-primary">
+                            @if($camp->thumbnail)
+                                <img src="{{ $camp->thumbnail }}" alt="{{ $camp->title }}" class="w-12 h-8 object-cover rounded-lg border border-slate-100">
+                            @endif
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-bold text-charcoal truncate">{{ $camp->title }}</p>
+                                <p class="text-[10px] text-slate-400 font-semibold capitalize">{{ $camp->category }} &bull; Target: Rp {{ number_format($camp->target_amount, 0, ',', '.') }}</p>
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+                    <span class="block text-[10px] text-slate-400 font-semibold leading-normal">
+                        * Catatan: Anda dapat memilih beberapa kampanye. Kampanye yang tidak aktif (draft/completed) tidak akan ditampilkan di halaman depan publik.
+                    </span>
+                </div>
+            </div>
+        </div>
 
         <!-- Form Actions -->
         <div class="pt-6 border-t border-slate-100 flex items-center justify-end">
@@ -218,6 +261,17 @@
                 document.getElementById('popup-image-preview').src = e.target.result;
             }
             reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function toggleCarouselSourceFields(source) {
+        var customFields = document.getElementById('carousel-custom-fields');
+        if (customFields) {
+            if (source === 'custom') {
+                customFields.classList.remove('hidden');
+            } else {
+                customFields.classList.add('hidden');
+            }
         }
     }
 
@@ -256,6 +310,12 @@
         var popupTypeSelect = document.getElementById('popup_type');
         if (popupTypeSelect) {
             togglePopupTypeFields(popupTypeSelect.value);
+        }
+
+        // Initialize carousel fields visibility
+        var carouselSourceSelect = document.getElementById('carousel_source');
+        if (carouselSourceSelect) {
+            toggleCarouselSourceFields(carouselSourceSelect.value);
         }
     });
 </script>

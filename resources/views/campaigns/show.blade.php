@@ -3,7 +3,7 @@
 @section('title', $campaign->title . ' - Pedulia')
 
 @section('content')
-<div class="py-12 bg-slate-50">
+<div class="py-12 bg-slate-50 pb-28 lg:pb-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Breadcrumb / Back Navigation -->
@@ -140,65 +140,14 @@
                     
                     <div class="mb-5">
                         <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider">Salurkan Kebaikan Anda</h3>
-                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">Pilih nominal donasi atau masukkan secara manual</p>
+                        <p class="text-[11px] text-slate-400 font-semibold mt-0.5">Dukung kampanye ini dengan berdonasi secara aman dan transparan</p>
                     </div>
 
-                    <!-- Nominal Choice Buttons Grid -->
-                    @if($campaign->donation_options && count($campaign->donation_options) > 0)
-                    <div class="grid grid-cols-2 gap-3 mb-4.5">
-                        @foreach($campaign->donation_options as $option)
-                        <button type="button" 
-                                onclick="selectNominal({{ $option }}, this)" 
-                                class="nominal-btn py-3 bg-slate-50 border border-slate-200 hover:border-charcoal hover:bg-white text-xs font-bold text-charcoal rounded-xl transition-all cursor-pointer text-center focus:outline-none">
-                            Rp {{ number_format($option, 0, ',', '.') }}
-                        </button>
-                        @endforeach
-                    </div>
-                    @endif
-
-                    <!-- Custom Nominal Input Form -->
-                    <form action="{{ route('campaigns.donate', $campaign->slug) }}" method="POST" class="space-y-4.5">
-                        @csrf
-                        
-                        <!-- Donor Identity -->
-                        <div class="space-y-2">
-                            <label for="donor_name" class="text-xs font-bold text-charcoal">Nama Donatur (Wajib)</label>
-                            <input type="text" name="donor_name" id="donor_name" required placeholder="Nama lengkap Anda" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="donor_email" class="text-xs font-bold text-charcoal">Email (Wajib)</label>
-                            <input type="email" name="donor_email" id="donor_email" required placeholder="nama@email.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="comment" class="text-xs font-bold text-charcoal">Pesan atau Doa Baik (Opsional)</label>
-                            <textarea name="comment" id="comment" rows="3" placeholder="Tuliskan doa atau pesan dukungan Anda..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all resize-none"></textarea>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label for="custom-nominal" class="text-xs font-bold text-charcoal">Nominal Donasi Lainnya (Rp)</label>
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 pl-4.5 flex items-center text-xs font-bold text-slate-400">Rp</span>
-                                <input type="number" name="nominal" id="custom-nominal" min="10000" placeholder="Minimal Rp 10.000" required class="w-full pl-11 pr-4.5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
-                            </div>
-                        </div>
-
-                        <!-- Payment Method selection -->
-                        <div class="space-y-2">
-                            <label for="payment-method" class="text-xs font-bold text-charcoal">Metode Pembayaran</label>
-                            <select name="payment_method" id="payment-method" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-charcoal focus:outline-none focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
-                                <option value="qris">QRIS (GoPay, OVO, Dana, LinkAja)</option>
-                                <option value="bank_nobu">Transfer Bank (Nobu Bank)</option>
-                            </select>
-                        </div>
-
-                        <!-- Action Button -->
-                        <button type="submit" 
-                                class="w-full py-4 bg-primary text-charcoal font-bold rounded-2xl text-sm shadow-[0_4px_14px_rgba(159,239,0,0.3)] hover:bg-primary-hover hover:shadow-[0_6px_20px_rgba(159,239,0,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer text-center">
-                            Donasi Sekarang
-                        </button>
-                    </form>
+                    <!-- Action Button to Dedicated Page -->
+                    <a href="{{ route('campaigns.donate.create', $campaign->slug) }}" 
+                       class="block w-full py-4 bg-primary text-charcoal font-extrabold rounded-2xl text-xs sm:text-sm shadow-[0_4px_14px_rgba(159,239,0,0.3)] hover:bg-primary-hover hover:shadow-[0_6px_20px_rgba(159,239,0,0.5)] transition-all duration-300 transform hover:-translate-y-0.5 text-center cursor-pointer">
+                        Donasi Sekarang
+                    </a>
 
                     <!-- Trust Badge -->
                     <div class="mt-6 pt-5 border-t border-slate-100 flex items-center space-x-3 text-[10px] text-slate-400 font-semibold justify-center">
@@ -211,6 +160,19 @@
                 </div>
 
             </div>
+
+        </div>
+
+        <!-- Sticky Bottom Bar for Mobile -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 p-4 z-40 lg:hidden flex items-center justify-between shadow-[0_-6px_24px_rgba(0,0,0,0.06)] animate-fade-in-up">
+            <div class="flex-1 min-w-0 pr-4">
+                <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider block mb-0.5">Dana Terkumpul</span>
+                <span class="text-sm font-extrabold text-charcoal">Rp {{ number_format($campaign->current_amount, 0, ',', '.') }}</span>
+            </div>
+            <a href="{{ route('campaigns.donate.create', $campaign->slug) }}" class="px-6 py-3.5 bg-primary text-charcoal font-extrabold rounded-full text-xs shadow-[0_4px_12px_rgba(159,239,0,0.3)] hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer text-center">
+                Donasi Sekarang
+            </a>
+        </div>
 
         </div>
 
@@ -269,31 +231,4 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-    const customNominalInput = document.getElementById('custom-nominal');
-    const nominalButtons = document.querySelectorAll('.nominal-btn');
 
-    function selectNominal(amount, btnElement) {
-        customNominalInput.value = amount;
-        
-        // Add active classes to selected button
-        nominalButtons.forEach(btn => {
-            btn.classList.remove('bg-slate-950', 'text-white', 'border-slate-950');
-            btn.classList.add('bg-slate-50', 'text-charcoal', 'border-slate-200');
-        });
-
-        // Find clicked button and style it active
-        btnElement.classList.remove('bg-slate-50', 'text-charcoal', 'border-slate-200');
-        btnElement.classList.add('bg-slate-950', 'text-white', 'border-slate-950');
-    }
-
-    // Clear active button state if custom nominal changes manually
-    customNominalInput.addEventListener('input', function() {
-        nominalButtons.forEach(btn => {
-            btn.classList.remove('bg-slate-950', 'text-white', 'border-slate-950');
-            btn.classList.add('bg-slate-50', 'text-charcoal', 'border-slate-200');
-        });
-    });
-</script>
-@endpush

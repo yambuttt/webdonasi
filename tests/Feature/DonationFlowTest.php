@@ -150,6 +150,16 @@ class DonationFlowTest extends TestCase
         \App\Models\Setting::set('bank_account_name', 'Pedulia Mock Account');
         \App\Models\Setting::set('whatsapp_number', '628111222333');
 
+        // Update payment method in DB as well to reflect customized bank details
+        $pm = \App\Models\PaymentMethod::where('code', 'bank_nobu')->first();
+        if ($pm) {
+            $pm->update([
+                'bank_name' => 'MOCK BANK INDONESIA',
+                'bank_account_number' => '123-456-789',
+                'bank_account_name' => 'Pedulia Mock Account',
+            ]);
+        }
+
         $donation = Donation::create([
             'campaign_id' => $this->campaign->id,
             'invoice_number' => 'INV-MOCK-999',
@@ -278,5 +288,122 @@ class DonationFlowTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Donasi Pendidikan');
         $response->assertSee($this->campaign->title);
+    }
+
+    public function test_public_campaigns_page_renders_successfully()
+    {
+        $response = $this->get(route('campaigns.index'));
+        $response->assertStatus(200);
+        $response->assertSee($this->campaign->title);
+        $response->assertSee('Daftar Kampanye Donasi');
+    }
+
+    public function test_admin_can_update_carousel_settings()
+    {
+        $campaign2 = Campaign::create([
+            'title' => 'Bantu Korban Banjir Bandang',
+            'slug' => 'bantu-korban-banjir-bandang',
+            'thumbnail' => '/images/campaign_flood.png',
+            'category' => 'bencana',
+            'description' => '<p>Deskripsi kampanye bencana alam.</p>',
+            'target_amount' => 100000000,
+            'current_amount' => 0,
+            'donation_options' => [20000, 50000],
+            'status' => 'active',
+            'days_remaining' => 25,
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.settings.update'), [
+                'bank_name' => 'BANK NEGARA INDONESIA',
+                'bank_account_number' => '9876-5432-10',
+                'bank_account_name' => 'Yayasan Amal Pedulia',
+                'whatsapp_number' => '6289999999999',
+                'carousel_source' => 'custom',
+                'carousel_campaign_ids' => [$this->campaign->id, $campaign2->id],
+            ]);
+
+        $response->assertRedirect(route('admin.settings.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertEquals('custom', \App\Models\Setting::get('carousel_source'));
+        
+        $savedIds = json_decode(\App\Models\Setting::get('carousel_campaign_ids'), true);
+        $this->assertContains($this->campaign->id, $savedIds);
+        $this->assertContains($campaign2->id, $savedIds);
+    }
+
+    public function test_donor_can_access_dedicated_donation_page()
+    {
+        $response = $this->get(route('campaigns.donate.create', $this->campaign->slug));
+        $response->assertStatus(200);
+        $response->assertSee('Anda akan berdonasi untuk');
+        $response->assertSee($this->campaign->title);
+        $response->assertSee('Nama Donatur (Wajib)');
+    }
+
+    public function test_admin_can_access_payment_methods_index()
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.payment-methods.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Metode Pembayaran');
+        $response->assertSee('QRIS (GoPay, OVO, Dana, LinkAja)');
+    }
+
+    public function test_admin_can_create_bank_payment_method()
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.payment-methods.store'), [
+                'name' => 'Bank Mandiri Syariah',
+                'type' => 'bank',
+                'bank_name' => 'BANK MANDIRI SYARIAH',
+                'bank_account_number' => '700-1122-3344',
+                'bank_account_name' => 'Pedulia Syariah',
+                'status' => '1',
+            ]);
+
+        $response->assertRedirect(route('admin.payment-methods.index'));
+        $this->assertDatabaseHas('payment_methods', [
+            'name' => 'Bank Mandiri Syariah',
+            'bank_name' => 'BANK MANDIRI SYARIAH',
+            'bank_account_number' => '700-1122-3344',
+        ]);
+    }
+
+    public function test_admin_can_edit_payment_method()
+    {
+        $pm = \App\Models\PaymentMethod::where('code', 'qris')->first();
+        $this->assertNotNull($pm);
+
+        $response = $this->actingAs($this->admin)
+            ->put(route('admin.payment-methods.update', $pm->id), [
+                'name' => 'QRIS Gopay & ShopeePay',
+                'type' => 'qris',
+                'status' => '1',
+            ]);
+
+        $response->assertRedirect(route('admin.payment-methods.index'));
+        $pm->refresh();
+        $this->assertEquals('QRIS Gopay & ShopeePay', $pm->name);
+    }
+
+    public function test_admin_can_delete_payment_method()
+    {
+        $pm = \App\Models\PaymentMethod::create([
+            'name' => 'Temp Bank',
+            'code' => 'temp-bank',
+            'type' => 'bank',
+            'bank_name' => 'TEMP',
+            'bank_account_number' => '123',
+            'bank_account_name' => 'TEMP',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->delete(route('admin.payment-methods.destroy', $pm->id));
+
+        $response->assertRedirect(route('admin.payment-methods.index'));
+        $this->assertDatabaseMissing('payment_methods', ['id' => $pm->id]);
     }
 }
