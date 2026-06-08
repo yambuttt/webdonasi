@@ -239,6 +239,10 @@
                         clearInterval(pollingInterval);
                         alert('Pembayaran donasi sukses diterima! Terima kasih.');
                         window.location.reload();
+                    } else if (data.status === 'cancelled') {
+                        clearInterval(pollingInterval);
+                        alert('Waktu pembayaran donasi telah habis (Expired). Silakan buat donasi baru.');
+                        window.location.reload();
                     } else if (isManual && data.status === 'pending') {
                         alert('Pembayaran belum terdeteksi. Silakan transfer nominal yang sesuai atau tunggu beberapa saat lagi jika Anda sudah membayar.');
                     }

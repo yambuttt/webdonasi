@@ -149,6 +149,16 @@
                                     </button>
                                 </form>
                             </div>
+                            @elseif($don->status === 'cancelled')
+                            <div class="flex items-center justify-end">
+                                <!-- Confirm Form (For cancelled/expired items that were actually paid) -->
+                                <form action="{{ route('admin.donations.confirm', $don->id) }}" method="POST" onsubmit="return confirm('Donasi ini sudah dibatalkan/expired. Apakah Anda yakin ingin tetap mengonfirmasi pembayaran donasi ini?');">
+                                    @csrf
+                                    <button type="submit" class="px-3 py-1.5 bg-primary hover:bg-primary-hover text-charcoal font-bold rounded-lg text-[10px] cursor-pointer transition-colors shadow-sm">
+                                        Konfirmasi
+                                    </button>
+                                </form>
+                            </div>
                             @else
                             <span class="text-[10px] text-slate-400 font-semibold">-</span>
                             @endif

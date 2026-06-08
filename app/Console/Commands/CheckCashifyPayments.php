@@ -69,6 +69,13 @@ class CheckCashifyPayments extends Command
                 $this->error("Exception while checking Invoice #{$donation->invoice_number}: " . $e->getMessage());
                 Log::error("Cashify Scheduler Exception for #{$donation->invoice_number}: " . $e->getMessage());
             }
+
+            // Expiration check: if still pending and older than 15 minutes, cancel it!
+            if ($donation->fresh()->status === 'pending' && $donation->created_at->diffInMinutes(now()) >= 15) {
+                $donation->update(['status' => 'cancelled']);
+                $this->info("Invoice #{$donation->invoice_number} has EXPIRED and was marked as CANCELLED.");
+                Log::info("Cashify Scheduler: Invoice #{$donation->invoice_number} expired and marked as CANCELLED.");
+            }
         }
 
         $this->info('Finished checking Cashify payments.');

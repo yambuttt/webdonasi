@@ -151,6 +151,10 @@ class DonationController extends Controller
             return response()->json(['status' => 'confirmed']);
         }
 
+        if ($donation->status === 'cancelled') {
+            return response()->json(['status' => 'cancelled']);
+        }
+
         if ($donation->status === 'pending' && $donation->cashify_transaction_id) {
             // Check if it is a simulated payment for local/sandbox testing when no real keys exist
             if (str_starts_with($donation->cashify_transaction_id, 'TX-SIMULATED-')) {
@@ -158,10 +162,9 @@ class DonationController extends Controller
                     $donation->update(['status' => 'confirmed']);
                     return response()->json(['status' => 'confirmed']);
                 }
-                return response()->json(['status' => 'pending']);
             }
 
-            if (config('services.cashify.license_key')) {
+            elseif (config('services.cashify.license_key')) {
                 try {
                     $response = Http::withoutVerifying()->withHeaders([
                         'x-license-key' => config('services.cashify.license_key'),
@@ -197,6 +200,12 @@ class DonationController extends Controller
                     Log::error('Cashify Check Status Exception: ' . $e->getMessage());
                 }
             }
+        }
+
+        // If it is still pending but older than 15 minutes, mark as cancelled/expired
+        if ($donation->status === 'pending' && $donation->created_at->diffInMinutes(now()) >= 15) {
+            $donation->update(['status' => 'cancelled']);
+            return response()->json(['status' => 'cancelled']);
         }
 
         return response()->json(['status' => $donation->status]);

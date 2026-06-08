@@ -120,6 +120,42 @@ class DonationFlowTest extends TestCase
         });
     }
 
+    public function test_admin_can_confirm_cancelled_donation()
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $donation = Donation::create([
+            'campaign_id' => $this->campaign->id,
+            'invoice_number' => 'INV-TEST-CANCELLED-CONFIRM',
+            'donor_name' => 'Hamba Allah',
+            'donor_email' => 'hamba@test.com',
+            'nominal' => 100000,
+            'unique_code' => 150,
+            'total_amount' => 100150,
+            'payment_method' => 'bank_nobu',
+            'status' => 'cancelled',
+        ]);
+
+        // Act as admin to hit confirmation endpoint
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.donations.confirm', $donation->id));
+
+        $response->assertRedirect();
+        
+        // Assert donation status updated to confirmed
+        $donation->refresh();
+        $this->assertEquals('confirmed', $donation->status);
+
+        // Assert campaign amount increased by nominal (10000000 + 100000 = 10100000)
+        $this->campaign->refresh();
+        $this->assertEquals(10100000, $this->campaign->current_amount);
+
+        // Assert that the email was sent
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\DonationSuccessMail::class, function ($mail) use ($donation) {
+            return $mail->hasTo($donation->donor_email) && $mail->donation->id === $donation->id;
+        });
+    }
+
     public function test_admin_can_access_settings_page()
     {
         $response = $this->actingAs($this->admin)
@@ -536,5 +572,71 @@ class DonationFlowTest extends TestCase
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\DonationSuccessMail::class, function ($mail) use ($donation) {
             return $mail->hasTo($donation->donor_email) && $mail->donation->id === $donation->id;
         });
+    }
+
+    public function test_expired_donation_is_cancelled_via_ajax_check()
+    {
+        $donation = Donation::create([
+            'campaign_id' => $this->campaign->id,
+            'invoice_number' => 'INV-EXPIRED-AJAX',
+            'donor_name' => 'Expired Donor',
+            'donor_email' => 'expired@test.com',
+            'nominal' => 20000,
+            'unique_code' => 123,
+            'total_amount' => 20123,
+            'payment_method' => 'qris',
+            'status' => 'pending',
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('donations')
+            ->where('id', $donation->id)
+            ->update(['created_at' => now()->subMinutes(16)]);
+
+        $response = $this->get(route('donations.status', $donation->invoice_number));
+        $response->assertStatus(200);
+        $response->assertJson(['status' => 'cancelled']);
+
+        $donation->refresh();
+        $this->assertEquals('cancelled', $donation->status);
+    }
+
+    public function test_expired_donation_is_cancelled_via_background_command()
+    {
+        config(['services.cashify.license_key' => 'test_license_key']);
+
+        $donation = Donation::create([
+            'campaign_id' => $this->campaign->id,
+            'invoice_number' => 'INV-EXPIRED-CRON',
+            'donor_name' => 'Expired Donor 2',
+            'donor_email' => 'expired2@test.com',
+            'nominal' => 30000,
+            'unique_code' => 456,
+            'total_amount' => 30456,
+            'payment_method' => 'qris',
+            'status' => 'pending',
+            'cashify_transaction_id' => 'TX-CRON-EXP',
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('donations')
+            ->where('id', $donation->id)
+            ->update(['created_at' => now()->subMinutes(16)]);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://cashify.my.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
+                'status' => 200,
+                'data' => [
+                    'status' => 'pending',
+                ]
+            ])
+        ]);
+
+        $this->artisan('app:check-cashify-payments')
+            ->expectsOutput("Checking status for 1 pending donation(s)...")
+            ->expectsOutput("Invoice #INV-EXPIRED-CRON is still pending.")
+            ->expectsOutput("Invoice #INV-EXPIRED-CRON has EXPIRED and was marked as CANCELLED.")
+            ->assertExitCode(0);
+
+        $donation->refresh();
+        $this->assertEquals('cancelled', $donation->status);
     }
 }

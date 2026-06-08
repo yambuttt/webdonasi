@@ -34,8 +34,8 @@ class DonationController extends Controller
     {
         $donation = Donation::findOrFail($id);
 
-        if ($donation->status !== 'pending') {
-            return redirect()->back()->with('error', 'Donasi ini sudah tidak berstatus pending.');
+        if ($donation->status === 'confirmed') {
+            return redirect()->back()->with('error', 'Donasi ini sudah dikonfirmasi sebelumnya.');
         }
 
         // Update donation status (which will automatically trigger campaign increment and thank you email)
