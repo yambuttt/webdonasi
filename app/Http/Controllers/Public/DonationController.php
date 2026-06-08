@@ -54,7 +54,7 @@ class DonationController extends Controller
                         'qr_id' => config('services.cashify.qris_id'),
                         'amount' => (int) $nominal,
                         'useUniqueCode' => true,
-                        'packageIds' => ['id.dana'],
+                        'packageIds' => ['com.bukalapak.mitra'],
                         'expiredInMinutes' => 15,
                         'qrType' => 'dynamic',
                         'paymentMethod' => 'qris',

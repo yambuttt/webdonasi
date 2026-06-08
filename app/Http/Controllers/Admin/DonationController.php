@@ -38,14 +38,8 @@ class DonationController extends Controller
             return redirect()->back()->with('error', 'Donasi ini sudah tidak berstatus pending.');
         }
 
-        DB::transaction(function () use ($donation) {
-            // Update donation status
-            $donation->update(['status' => 'confirmed']);
-
-            // Increment campaign target progress
-            $campaign = $donation->campaign;
-            $campaign->increment('current_amount', $donation->nominal);
-        });
+        // Update donation status (which will automatically trigger campaign increment and thank you email)
+        $donation->update(['status' => 'confirmed']);
 
         return redirect()->back()->with('success', 'Pembayaran donasi berhasil dikonfirmasi dan saldo kampanye telah diperbarui.');
     }

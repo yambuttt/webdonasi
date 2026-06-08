@@ -27,6 +27,30 @@ class Donation extends Model
     ];
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted()
+    {
+        static::updated(function ($donation) {
+            if ($donation->wasChanged('status') && $donation->status === 'confirmed') {
+                // 1. Increment the related campaign's current_amount
+                $campaign = $donation->campaign;
+                if ($campaign) {
+                    $campaign->increment('current_amount', $donation->nominal);
+                }
+
+                // 2. Send the thank-you email
+                try {
+                    \Illuminate\Support\Facades\Mail::to($donation->donor_email)
+                        ->send(new \App\Mail\DonationSuccessMail($donation));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Failed to send donation thank you email: ' . $e->getMessage());
+                }
+            }
+        });
+    }
+
+    /**
      * Get the campaign that owns the donation.
      */
     public function campaign()

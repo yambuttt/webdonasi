@@ -86,6 +86,8 @@ class DonationFlowTest extends TestCase
 
     public function test_admin_can_confirm_donation_and_increment_campaign_current_amount()
     {
+        \Illuminate\Support\Facades\Mail::fake();
+
         $donation = Donation::create([
             'campaign_id' => $this->campaign->id,
             'invoice_number' => 'INV-TEST-789012',
@@ -111,6 +113,11 @@ class DonationFlowTest extends TestCase
         // Assert campaign amount increased by nominal (10000000 + 100000 = 10100000)
         $this->campaign->refresh();
         $this->assertEquals(10100000, $this->campaign->current_amount);
+
+        // Assert that the email was sent
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\DonationSuccessMail::class, function ($mail) use ($donation) {
+            return $mail->hasTo($donation->donor_email) && $mail->donation->id === $donation->id;
+        });
     }
 
     public function test_admin_can_access_settings_page()
@@ -444,6 +451,7 @@ class DonationFlowTest extends TestCase
 
     public function test_check_status_via_ajax_calls_cashify_and_updates_donation()
     {
+        \Illuminate\Support\Facades\Mail::fake();
         config(['services.cashify.license_key' => 'test_license_key']);
 
         $donation = Donation::create([
@@ -474,10 +482,20 @@ class DonationFlowTest extends TestCase
 
         $donation->refresh();
         $this->assertEquals('confirmed', $donation->status);
+
+        // Assert campaign amount increased by nominal (10000000 + 20000 = 10020000)
+        $this->campaign->refresh();
+        $this->assertEquals(10020000, $this->campaign->current_amount);
+
+        // Assert that the email was sent
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\DonationSuccessMail::class, function ($mail) use ($donation) {
+            return $mail->hasTo($donation->donor_email) && $mail->donation->id === $donation->id;
+        });
     }
 
     public function test_check_cashify_payments_background_command()
     {
+        \Illuminate\Support\Facades\Mail::fake();
         config(['services.cashify.license_key' => 'test_license_key']);
 
         $donation = Donation::create([
@@ -509,5 +527,14 @@ class DonationFlowTest extends TestCase
 
         $donation->refresh();
         $this->assertEquals('confirmed', $donation->status);
+
+        // Assert campaign amount increased by nominal (10000000 + 30000 = 10030000)
+        $this->campaign->refresh();
+        $this->assertEquals(10030000, $this->campaign->current_amount);
+
+        // Assert that the email was sent
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\DonationSuccessMail::class, function ($mail) use ($donation) {
+            return $mail->hasTo($donation->donor_email) && $mail->donation->id === $donation->id;
+        });
     }
 }
