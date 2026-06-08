@@ -88,7 +88,7 @@
                         <label for="custom-nominal" class="text-xs font-bold text-charcoal">Nominal Donasi Lainnya (Rp)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4.5 flex items-center text-xs font-bold text-slate-400">Rp</span>
-                            <input type="number" name="nominal" id="custom-nominal" min="10000" placeholder="Minimal Rp 10.000" required class="w-full pl-11 pr-4.5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                            <input type="number" name="nominal" id="custom-nominal" min="1" placeholder="Minimal Rp 1" required class="w-full pl-11 pr-4.5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
                         </div>
                         <span class="text-[10px] text-red-500 font-bold hidden block" id="error-nominal"></span>
                     </div>
@@ -194,7 +194,7 @@
             btn.classList.remove('bg-slate-950', 'text-white', 'border-slate-950');
             btn.classList.add('bg-slate-50', 'text-charcoal', 'border-slate-200');
         });
-        if (parseInt(this.value) >= 10000) {
+        if (parseInt(this.value) >= 1) {
             document.getElementById('error-nominal').classList.add('hidden');
         }
     });
@@ -238,8 +238,8 @@
             const nominalVal = parseInt(customNominalInput.value);
             const nominalError = document.getElementById('error-nominal');
             
-            if (isNaN(nominalVal) || nominalVal < 10000) {
-                nominalError.textContent = 'Minimal donasi adalah Rp 10.000.';
+            if (isNaN(nominalVal) || nominalVal < 1) {
+                nominalError.textContent = 'Minimal donasi adalah Rp 1.';
                 nominalError.classList.remove('hidden');
                 customNominalInput.focus();
                 isValid = false;

@@ -58,6 +58,7 @@ Route::get('/campaigns/{slug}', [PublicCampaignController::class, 'show'])->name
 Route::get('/campaigns/{slug}/donate', [PublicDonationController::class, 'create'])->name('campaigns.donate.create');
 Route::post('/campaigns/{slug}/donate', [PublicDonationController::class, 'store'])->name('campaigns.donate');
 Route::get('/donations/{invoice_number}', [PublicDonationController::class, 'show'])->name('donations.invoice');
+Route::get('/donations/{invoice_number}/status', [PublicDonationController::class, 'checkStatus'])->name('donations.status');
 
 // Authentication routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

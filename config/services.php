@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'cashify' => [
+        'license_key' => env('CASHIFY_LICENSE_KEY'),
+        'qris_id' => env('CASHIFY_QRIS_ID'),
+    ],
+
 ];
