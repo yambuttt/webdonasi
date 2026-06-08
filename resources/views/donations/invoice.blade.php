@@ -74,13 +74,20 @@
                             <div class="absolute inset-0 flex items-center justify-center" style="transform: translateY(-2.5%);">
                                 <div class="w-[43%] h-[43%] bg-white flex items-center justify-center p-0.5">
                                     @if($donation->cashify_qr_string)
-                                        <img src="https://larabert-qrgen.hf.space/v1/create-qr-code?size=300x300&style=2&color=000000&data={{ urlencode($donation->cashify_qr_string) }}" alt="QRIS Barcode Dinamis" class="w-full h-full object-contain">
+                                        <img id="qris-image-el" src="https://larabert-qrgen.hf.space/v1/create-qr-code?size=300x300&style=2&color=000000&data={{ urlencode($donation->cashify_qr_string) }}" alt="QRIS Barcode Dinamis" class="w-full h-full object-contain">
                                     @else
-                                        <img src="{{ $paymentMethod ? $paymentMethod->qris_image : App\Models\Setting::get('qris_image', '/images/qris.png') }}" alt="QRIS Barcode" class="w-full h-full object-contain">
+                                        <img id="qris-image-el" src="{{ $paymentMethod ? $paymentMethod->qris_image : App\Models\Setting::get('qris_image', '/images/qris.png') }}" alt="QRIS Barcode" class="w-full h-full object-contain">
                                     @endif
                                 </div>
                             </div>
                         </div>
+                        <!-- Download QRIS Button -->
+                        <button type="button" id="btn-download-qris" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-charcoal font-bold rounded-xl text-[11px] cursor-pointer transition-all flex items-center space-x-1.5 shadow-sm border border-slate-200/40">
+                            <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Unduh Kode QRIS</span>
+                        </button>
                         <div class="text-left text-xs font-semibold text-slate-500 leading-relaxed space-y-2 max-w-md">
                             @if($donation->cashify_qr_string)
                                 <p class="font-bold text-charcoal text-center text-sm">Scan QRIS Dinamis Pedulia</p>
@@ -261,6 +268,111 @@
             btnCheck.addEventListener('click', function(e) {
                 e.preventDefault();
                 checkPaymentStatus(true);
+            });
+        }
+
+        const btnDownload = document.getElementById('btn-download-qris');
+        if (btnDownload) {
+            btnDownload.addEventListener('click', function() {
+                const qrImgEl = document.getElementById('qris-image-el');
+                if (qrImgEl) {
+                    const filename = 'QRIS-Pedulia-' + "{{ $donation->invoice_number }}" + '.png';
+                    const originalContent = btnDownload.innerHTML;
+
+                    btnDownload.innerHTML = `
+                        <svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Memproses...</span>
+                    `;
+                    btnDownload.disabled = true;
+
+                    const fallbackDownload = function() {
+                        const imageUrl = qrImgEl.src;
+                        fetch(imageUrl)
+                            .then(response => response.blob())
+                            .then(blob => {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = filename;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                                
+                                btnDownload.innerHTML = originalContent;
+                                btnDownload.disabled = false;
+                            })
+                            .catch(error => {
+                                window.open(imageUrl, '_blank');
+                                btnDownload.innerHTML = originalContent;
+                                btnDownload.disabled = false;
+                            });
+                    };
+
+                    // Load Background Template and QR Code into Canvas to merge them
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    const bgImg = new Image();
+                    bgImg.crossOrigin = 'anonymous';
+                    bgImg.src = "{{ asset('images/qris_template.png') }}";
+
+                    bgImg.onload = function() {
+                        const qrImg = new Image();
+                        qrImg.crossOrigin = 'anonymous';
+                        qrImg.src = qrImgEl.src;
+
+                        qrImg.onload = function() {
+                            const size = bgImg.naturalWidth || 800;
+                            canvas.width = size;
+                            canvas.height = size;
+
+                            // 1. Draw Background Template
+                            ctx.drawImage(bgImg, 0, 0, size, size);
+
+                            // 2. Calculate coordinates (43% scale of template size)
+                            const qrSize = size * 0.43;
+                            const qrX = (size - qrSize) / 2;
+                            const qrY = ((size - qrSize) / 2) - (size * 0.025);
+
+                            // 3. Draw white background card for QR Code
+                            const padding = size * 0.01;
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(qrX - padding, qrY - padding, qrSize + (padding * 2), qrSize + (padding * 2));
+
+                            // 4. Draw QR Code
+                            ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+                            // 5. Convert to Blob & Download
+                            canvas.toBlob(function(blob) {
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = filename;
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                                
+                                btnDownload.innerHTML = originalContent;
+                                btnDownload.disabled = false;
+                            }, 'image/png');
+                        };
+
+                        qrImg.onerror = function() {
+                            console.warn('Failed to load QR image in canvas, falling back to barcode only');
+                            fallbackDownload();
+                        };
+                    };
+
+                    bgImg.onerror = function() {
+                        console.warn('Failed to load background template in canvas, falling back to barcode only');
+                        fallbackDownload();
+                    };
+                }
             });
         }
     });
