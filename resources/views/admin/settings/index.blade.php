@@ -232,6 +232,99 @@
             </div>
         </div>
 
+        <!-- Footer & Social Media Setting Section -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start border-t border-slate-100 pt-8">
+            <div class="md:col-span-4 space-y-1">
+                <h3 class="text-sm font-extrabold text-charcoal uppercase tracking-wider">Footer: Kontak & Sosial Media</h3>
+                <p class="text-[11px] text-slate-400 font-semibold leading-relaxed">Konfigurasi informasi kontak dan maksimal 4 akun sosial media yang tampil pada bagian bawah (footer) website.</p>
+            </div>
+            
+            <div class="md:col-span-8 space-y-6">
+                <!-- Kontak & Bantuan -->
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-charcoal uppercase tracking-wider border-b border-slate-100 pb-2">Kontak & Bantuan</h4>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label for="contact_email" class="text-xs font-bold text-charcoal">Email Kontak</label>
+                            <input type="email" name="contact_email" id="contact_email" value="{{ old('contact_email', $settings['contact_email']) }}" placeholder="Contoh: support@pedulia.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label for="contact_phone" class="text-xs font-bold text-charcoal">Nomor Telepon Kontak</label>
+                            <input type="text" name="contact_phone" id="contact_phone" value="{{ old('contact_phone', $settings['contact_phone']) }}" placeholder="Contoh: (021) 8293-1029" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label for="contact_address" class="text-xs font-bold text-charcoal">Alamat Lengkap</label>
+                        <input type="text" name="contact_address" id="contact_address" value="{{ old('contact_address', $settings['contact_address']) }}" placeholder="Contoh: Menteng, Jakarta Pusat, Indonesia" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold placeholder-slate-400 focus:outline-none focus:bg-white focus:border-charcoal focus:ring-1 focus:ring-charcoal transition-all">
+                    </div>
+                </div>
+
+                <!-- Ikuti Kami -->
+                <div class="space-y-4 pt-2">
+                    <h4 class="text-xs font-bold text-charcoal uppercase tracking-wider border-b border-slate-100 pb-2">Ikuti Kami (Sosial Media)</h4>
+                    
+                    <div class="space-y-4">
+                        @foreach($settings['social_media'] as $index => $social)
+                            <div class="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl space-y-3">
+                                <input type="hidden" name="socials[{{ $index }}][id]" value="{{ $social['id'] }}">
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        @if($social['id'] !== 'custom')
+                                            <!-- Default SVG Icons for preview -->
+                                            <div class="p-1.5 bg-slate-100 rounded-lg text-charcoal flex items-center justify-center">
+                                                @if($social['id'] === 'facebook')
+                                                    <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                                                @elseif($social['id'] === 'twitter')
+                                                    <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                                                @elseif($social['id'] === 'instagram')
+                                                    <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204 0.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                                @endif
+                                            </div>
+                                            <span class="text-xs font-bold text-charcoal">{{ ucfirst($social['id']) }}</span>
+                                            <input type="hidden" name="socials[{{ $index }}][name]" value="{{ ucfirst($social['id']) }}">
+                                        @else
+                                            <!-- Custom social slot icon and label -->
+                                            <div class="flex items-center space-x-2">
+                                                <div class="h-6 w-6 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center p-0.5">
+                                                    @if($social['icon_custom_path'])
+                                                        <img id="custom-social-preview" src="{{ $social['icon_custom_path'] }}" alt="Custom Icon Preview" class="w-full h-full object-contain">
+                                                    @else
+                                                        <span id="custom-social-placeholder" class="text-[9px] font-bold text-slate-400">Icon</span>
+                                                    @endif
+                                                </div>
+                                                <input type="text" name="socials[{{ $index }}][name]" value="{{ old('socials.'.$index.'.name', $social['name']) }}" placeholder="Nama Sosmed (cth: TikTok)" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold placeholder-slate-400 focus:outline-none focus:border-charcoal transition-all w-36">
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Display toggle -->
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" name="socials[{{ $index }}][is_active]" value="1" id="social-active-{{ $index }}" {{ old('socials.'.$index.'.is_active', $social['is_active']) ? 'checked' : '' }} class="h-4 w-4 text-primary border-slate-300 rounded focus:ring-primary">
+                                        <label for="social-active-{{ $index }}" class="text-[10px] font-bold text-slate-500 cursor-pointer">Tampilkan</label>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                                    <div class="md:col-span-8 space-y-1">
+                                        <input type="text" name="socials[{{ $index }}][url]" value="{{ old('socials.'.$index.'.url', $social['url']) }}" placeholder="URL Profil Lengkap (contoh: https://instagram.com/pedulia)" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold placeholder-slate-400 focus:outline-none focus:border-charcoal transition-all">
+                                    </div>
+                                    @if($social['id'] === 'custom')
+                                        <div class="md:col-span-4">
+                                            <input type="file" name="social_custom_icon" id="social_custom_icon" onchange="previewSocialIcon(this)" class="text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-bold file:bg-primary/10 file:text-charcoal-light hover:file:bg-primary/20 file:cursor-pointer w-full">
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Form Actions -->
         <div class="pt-6 border-t border-slate-100 flex items-center justify-end">
             <button type="submit" class="px-8 py-3.5 bg-primary text-charcoal font-bold rounded-xl text-xs shadow-[0_4px_12px_rgba(159,239,0,0.3)] hover:bg-primary-hover hover:shadow-[0_6px_16px_rgba(159,239,0,0.5)] transition-all cursor-pointer">
@@ -259,6 +352,24 @@
             var reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('popup-image-preview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewSocialIcon(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                const previewEl = document.getElementById('custom-social-preview');
+                if (previewEl) {
+                    previewEl.src = e.target.result;
+                } else {
+                    const placeholder = document.getElementById('custom-social-placeholder');
+                    if (placeholder) {
+                        placeholder.outerHTML = `<img id="custom-social-preview" src="${e.target.result}" alt="Custom Icon Preview" class="w-full h-full object-contain">`;
+                    }
+                }
             }
             reader.readAsDataURL(input.files[0]);
         }

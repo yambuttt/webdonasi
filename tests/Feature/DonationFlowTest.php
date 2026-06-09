@@ -173,6 +173,15 @@ class DonationFlowTest extends TestCase
                 'bank_account_number' => '9876-5432-10',
                 'bank_account_name' => 'Yayasan Amal Pedulia',
                 'whatsapp_number' => '6289999999999',
+                'contact_email' => 'support@pedulia.com',
+                'contact_phone' => '(021) 8293-1029',
+                'contact_address' => 'Menteng, Jakarta Pusat, Indonesia',
+                'socials' => [
+                    ['id' => 'facebook', 'name' => 'Facebook', 'url' => 'https://facebook.com', 'is_active' => '1'],
+                    ['id' => 'twitter', 'name' => 'Twitter', 'url' => 'https://twitter.com', 'is_active' => '1'],
+                    ['id' => 'instagram', 'name' => 'Instagram', 'url' => 'https://instagram.com', 'is_active' => '1'],
+                    ['id' => 'custom', 'name' => '', 'url' => '', 'is_active' => '0'],
+                ]
             ]);
 
         $response->assertRedirect(route('admin.settings.index'));
@@ -308,6 +317,15 @@ class DonationFlowTest extends TestCase
                 'popup_campaign_id' => $this->campaign->id,
                 'popup_title' => 'Pop-up Test Kampanye',
                 'popup_description' => 'Deskripsi kampanye uji coba',
+                'contact_email' => 'support@pedulia.com',
+                'contact_phone' => '(021) 8293-1029',
+                'contact_address' => 'Menteng, Jakarta Pusat, Indonesia',
+                'socials' => [
+                    ['id' => 'facebook', 'name' => 'Facebook', 'url' => 'https://facebook.com', 'is_active' => '1'],
+                    ['id' => 'twitter', 'name' => 'Twitter', 'url' => 'https://twitter.com', 'is_active' => '1'],
+                    ['id' => 'instagram', 'name' => 'Instagram', 'url' => 'https://instagram.com', 'is_active' => '1'],
+                    ['id' => 'custom', 'name' => '', 'url' => '', 'is_active' => '0'],
+                ]
             ]);
 
         $response->assertRedirect(route('admin.settings.index'));
@@ -364,6 +382,15 @@ class DonationFlowTest extends TestCase
                 'whatsapp_number' => '6289999999999',
                 'carousel_source' => 'custom',
                 'carousel_campaign_ids' => [$this->campaign->id, $campaign2->id],
+                'contact_email' => 'support@pedulia.com',
+                'contact_phone' => '(021) 8293-1029',
+                'contact_address' => 'Menteng, Jakarta Pusat, Indonesia',
+                'socials' => [
+                    ['id' => 'facebook', 'name' => 'Facebook', 'url' => 'https://facebook.com', 'is_active' => '1'],
+                    ['id' => 'twitter', 'name' => 'Twitter', 'url' => 'https://twitter.com', 'is_active' => '1'],
+                    ['id' => 'instagram', 'name' => 'Instagram', 'url' => 'https://instagram.com', 'is_active' => '1'],
+                    ['id' => 'custom', 'name' => '', 'url' => '', 'is_active' => '0'],
+                ]
             ]);
 
         $response->assertRedirect(route('admin.settings.index'));
@@ -639,4 +666,134 @@ class DonationFlowTest extends TestCase
         $donation->refresh();
         $this->assertEquals('cancelled', $donation->status);
     }
+
+    public function test_admin_can_update_footer_contacts_and_social_media()
+    {
+        $payload = [
+            'bank_name' => 'NOBU BANK',
+            'bank_account_number' => '1031-0988-1234',
+            'bank_account_name' => 'Yayasan Pedulia',
+            'whatsapp_number' => '6281234567890',
+            'popup_active' => '0',
+            'popup_type' => 'custom_image',
+            'carousel_source' => 'latest',
+            
+            // Footer contact & support
+            'contact_email' => 'custom-support@pedulia.org',
+            'contact_phone' => '0899-999-999',
+            'contact_address' => 'Sudirman, Jakarta Selatan, Indonesia',
+            
+            // Socials payload
+            'socials' => [
+                [
+                    'id' => 'facebook',
+                    'name' => 'Facebook',
+                    'url' => 'https://facebook.com/pedulia.new',
+                    'is_active' => '1',
+                ],
+                [
+                    'id' => 'twitter',
+                    'name' => 'Twitter',
+                    'url' => 'https://twitter.com/pedulia.new',
+                    'is_active' => '1',
+                ],
+                [
+                    'id' => 'instagram',
+                    'name' => 'Instagram',
+                    'url' => 'https://instagram.com/pedulia.new',
+                    'is_active' => '0', // Disabled
+                ],
+                [
+                    'id' => 'custom',
+                    'name' => 'YouTube',
+                    'url' => 'https://youtube.com/c/pedulia',
+                    'is_active' => '1', // Custom enabled
+                ],
+            ]
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.settings.update'), $payload);
+
+        $response->assertRedirect();
+        
+        $this->assertEquals('custom-support@pedulia.org', \App\Models\Setting::get('contact_email'));
+        $this->assertEquals('0899-999-999', \App\Models\Setting::get('contact_phone'));
+        $this->assertEquals('Sudirman, Jakarta Selatan, Indonesia', \App\Models\Setting::get('contact_address'));
+
+        $socials = json_decode(\App\Models\Setting::get('social_media'), true);
+        $this->assertCount(4, $socials);
+        $this->assertEquals('facebook', $socials[0]['id']);
+        $this->assertTrue($socials[0]['is_active']);
+        $this->assertEquals('https://facebook.com/pedulia.new', $socials[0]['url']);
+        
+        $this->assertFalse($socials[2]['is_active']); // Instagram should be inactive
+        
+        $this->assertEquals('custom', $socials[3]['id']);
+        $this->assertEquals('YouTube', $socials[3]['name']);
+        $this->assertTrue($socials[3]['is_active']);
+    }
+
+    public function test_public_footer_renders_dynamic_contacts_and_social_media()
+    {
+        \App\Models\Setting::set('contact_email', 'dynamic-footer-email@test.com');
+        \App\Models\Setting::set('contact_phone', '(021) 9999-8888');
+        \App\Models\Setting::set('contact_address', 'Kebagusan Raya, Jakarta Selatan');
+
+        $socialMedia = [
+            [
+                'id' => 'facebook',
+                'name' => 'Facebook',
+                'url' => 'https://facebook.com/active-fb',
+                'is_active' => true,
+                'icon_type' => 'default',
+                'icon_default' => 'facebook',
+                'icon_custom_path' => null
+            ],
+            [
+                'id' => 'twitter',
+                'name' => 'Twitter',
+                'url' => 'https://twitter.com/active-tw',
+                'is_active' => true,
+                'icon_type' => 'default',
+                'icon_default' => 'twitter',
+                'icon_custom_path' => null
+            ],
+            [
+                'id' => 'instagram',
+                'name' => 'Instagram',
+                'url' => 'https://instagram.com/inactive-ig',
+                'is_active' => false, // Disabled
+                'icon_type' => 'default',
+                'icon_default' => 'instagram',
+                'icon_custom_path' => null
+            ],
+            [
+                'id' => 'custom',
+                'name' => 'TikTok',
+                'url' => 'https://tiktok.com/@active-custom',
+                'is_active' => true,
+                'icon_type' => 'custom',
+                'icon_default' => null,
+                'icon_custom_path' => '/images/socials/custom_tiktok.png'
+            ]
+        ];
+        \App\Models\Setting::set('social_media', json_encode($socialMedia));
+
+        $response = $this->get('/');
+        $response->assertStatus(200);
+
+        // Assert Contacts are present
+        $response->assertSee('dynamic-footer-email@test.com');
+        $response->assertSee('(021) 9999-8888');
+        $response->assertSee('Kebagusan Raya, Jakarta Selatan');
+
+        // Assert Social links are present
+        $response->assertSee('https://facebook.com/active-fb');
+        $response->assertSee('https://twitter.com/active-tw');
+        $response->assertDontSee('https://instagram.com/inactive-ig');
+        $response->assertSee('https://tiktok.com/@active-custom');
+        $response->assertSee('/images/socials/custom_tiktok.png');
+    }
 }
+

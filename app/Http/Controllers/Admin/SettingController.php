@@ -30,7 +30,74 @@ class SettingController extends Controller
             'popup_description' => Setting::get('popup_description'),
             'carousel_source' => Setting::get('carousel_source', 'latest'),
             'carousel_campaign_ids' => json_decode(Setting::get('carousel_campaign_ids', '[]'), true),
+            // Footer contact & support settings
+            'contact_email' => Setting::get('contact_email', 'support@pedulia.com'),
+            'contact_phone' => Setting::get('contact_phone', '(021) 8293-1029'),
+            'contact_address' => Setting::get('contact_address', 'Menteng, Jakarta Pusat, Indonesia'),
         ];
+
+        // Retrieve social media settings
+        $defaultSocials = [
+            [
+                'id' => 'facebook',
+                'name' => 'Facebook',
+                'url' => 'https://facebook.com',
+                'is_active' => true,
+                'icon_type' => 'default',
+                'icon_default' => 'facebook',
+                'icon_custom_path' => null
+            ],
+            [
+                'id' => 'twitter',
+                'name' => 'Twitter',
+                'url' => 'https://twitter.com',
+                'is_active' => true,
+                'icon_type' => 'default',
+                'icon_default' => 'twitter',
+                'icon_custom_path' => null
+            ],
+            [
+                'id' => 'instagram',
+                'name' => 'Instagram',
+                'url' => 'https://instagram.com',
+                'is_active' => true,
+                'icon_type' => 'default',
+                'icon_default' => 'instagram',
+                'icon_custom_path' => null
+            ],
+            [
+                'id' => 'custom',
+                'name' => '',
+                'url' => '',
+                'is_active' => false,
+                'icon_type' => 'custom',
+                'icon_default' => null,
+                'icon_custom_path' => null
+            ]
+        ];
+
+        $socialMediaJson = Setting::get('social_media');
+        $socialMedia = $socialMediaJson ? json_decode($socialMediaJson, true) : $defaultSocials;
+
+        if (!is_array($socialMedia) || count($socialMedia) < 4) {
+            $socialMedia = is_array($socialMedia) ? array_values($socialMedia) : [];
+            for ($i = count($socialMedia); $i < 4; $i++) {
+                if ($i === 3) {
+                    $socialMedia[$i] = [
+                        'id' => 'custom',
+                        'name' => '',
+                        'url' => '',
+                        'is_active' => false,
+                        'icon_type' => 'custom',
+                        'icon_default' => null,
+                        'icon_custom_path' => null
+                    ];
+                } else {
+                    $socialMedia[$i] = $defaultSocials[$i];
+                }
+            }
+        }
+        $settings['social_media'] = $socialMedia;
 
         $campaigns = \App\Models\Campaign::latest()->get();
         $articles = \App\Models\Article::latest()->get();
@@ -61,6 +128,15 @@ class SettingController extends Controller
             'carousel_source' => 'nullable|in:latest,custom',
             'carousel_campaign_ids' => 'required_if:carousel_source,custom|array',
             'carousel_campaign_ids.*' => 'exists:campaigns,id',
+            // Footer validations
+            'contact_email' => 'required|email|max:150',
+            'contact_phone' => 'required|string|max:50',
+            'contact_address' => 'required|string|max:255',
+            'socials' => 'required|array|size:4',
+            'socials.*.id' => 'required|string',
+            'socials.*.name' => 'nullable|string|max:50',
+            'socials.*.url' => 'nullable|url|max:255',
+            'social_custom_icon' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:1024',
         ], [
             'qris_image.image' => 'File QRIS harus berupa gambar.',
             'qris_image.mimes' => 'Format gambar QRIS wajib jpeg, png, jpg, atau svg.',
@@ -77,6 +153,14 @@ class SettingController extends Controller
             'popup_custom_image.max' => 'Ukuran gambar pop-up tidak boleh melebihi 2MB.',
             'popup_link.url' => 'Format link pop-up kustom harus berupa URL yang valid.',
             'carousel_campaign_ids.required_if' => 'Kampanye wajib dipilih jika sumber slideshow diatur ke Pilihan Admin.',
+            'contact_email.required' => 'Email kontak wajib diisi.',
+            'contact_email.email' => 'Format email kontak tidak valid.',
+            'contact_phone.required' => 'Nomor telepon kontak wajib diisi.',
+            'contact_address.required' => 'Alamat kontak wajib diisi.',
+            'socials.*.url.url' => 'Format URL sosial media tidak valid.',
+            'social_custom_icon.image' => 'File ikon harus berupa gambar.',
+            'social_custom_icon.mimes' => 'Format ikon wajib jpeg, png, jpg, atau svg.',
+            'social_custom_icon.max' => 'Ukuran ikon tidak boleh melebihi 1MB.',
         ]);
 
         // Process QRIS Image upload if present
@@ -122,6 +206,70 @@ class SettingController extends Controller
                 Setting::set('carousel_campaign_ids', json_encode([]));
             }
         }
+
+        // Save footer contact details
+        Setting::set('contact_email', $request->input('contact_email'));
+        Setting::set('contact_phone', $request->input('contact_phone'));
+        Setting::set('contact_address', $request->input('contact_address'));
+
+        // Save social media configurations
+        $existingSocialsJson = Setting::get('social_media');
+        $existingSocials = $existingSocialsJson ? json_decode($existingSocialsJson, true) : [];
+
+        $inputSocials = $request->input('socials');
+        $processedSocials = [];
+
+        foreach ($inputSocials as $social) {
+            $id = $social['id'];
+            $name = $social['name'] ?? '';
+            $url = $social['url'] ?? '';
+            $isActive = isset($social['is_active']) && ($social['is_active'] == '1' || $social['is_active'] == 'on');
+
+            // Find existing to preserve custom icon path
+            $existingItem = null;
+            if (is_array($existingSocials)) {
+                foreach ($existingSocials as $item) {
+                    if (isset($item['id']) && $item['id'] === $id) {
+                        $existingItem = $item;
+                        break;
+                    }
+                }
+            }
+
+            $iconType = ($id === 'custom') ? 'custom' : 'default';
+            $iconDefault = ($id !== 'custom') ? $id : null;
+            $iconCustomPath = $existingItem ? ($existingItem['icon_custom_path'] ?? null) : null;
+
+            // Handle custom icon upload for the 4th item
+            if ($id === 'custom' && $request->hasFile('social_custom_icon')) {
+                $file = $request->file('social_custom_icon');
+                $filename = 'social_custom_' . time() . '.' . $file->getClientOriginalExtension();
+                
+                if (!file_exists(public_path('images/socials'))) {
+                    mkdir(public_path('images/socials'), 0755, true);
+                }
+                
+                $file->move(public_path('images/socials'), $filename);
+                $iconCustomPath = '/images/socials/' . $filename;
+            }
+
+            // Fallback name for default platforms
+            if ($id !== 'custom') {
+                $name = ucfirst($id);
+            }
+
+            $processedSocials[] = [
+                'id' => $id,
+                'name' => $name,
+                'url' => $url,
+                'is_active' => $isActive,
+                'icon_type' => $iconType,
+                'icon_default' => $iconDefault,
+                'icon_custom_path' => $iconCustomPath,
+            ];
+        }
+
+        Setting::set('social_media', json_encode($processedSocials));
 
         return redirect()->route('admin.settings.index')->with('success', 'Pengaturan sistem berhasil diperbarui.');
     }
