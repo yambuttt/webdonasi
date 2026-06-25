@@ -35,9 +35,9 @@ return [
         ],
     ],
 
-    'cashify' => [
-        'license_key' => env('CASHIFY_LICENSE_KEY'),
-        'qris_id' => env('CASHIFY_QRIS_ID'),
+    'casaku' => [
+        'license_key' => env('CASAKU_LICENSE_KEY', env('CASHIFY_LICENSE_KEY')),
+        'qris_id' => env('CASAKU_QRIS_ID', env('CASHIFY_QRIS_ID')),
     ],
 
 ];

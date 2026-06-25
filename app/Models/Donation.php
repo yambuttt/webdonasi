@@ -18,8 +18,8 @@ class Donation extends Model
         'status',
         'comment',
         'is_comment_visible',
-        'cashify_transaction_id',
-        'cashify_qr_string',
+        'casaku_transaction_id',
+        'casaku_qr_string',
     ];
 
     protected $casts = [

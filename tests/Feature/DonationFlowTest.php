@@ -477,17 +477,17 @@ class DonationFlowTest extends TestCase
         $this->assertDatabaseMissing('payment_methods', ['id' => $pm->id]);
     }
 
-    public function test_donor_can_create_qris_donation_with_cashify()
+    public function test_donor_can_create_qris_donation_with_casaku()
     {
         // Mock config keys
-        config(['services.cashify.license_key' => 'test_license_key']);
-        config(['services.cashify.qris_id' => 'test_qris_id']);
+        config(['services.casaku.license_key' => 'test_license_key']);
+        config(['services.casaku.qris_id' => 'test_qris_id']);
 
         \Illuminate\Support\Facades\Http::fake([
-            'https://cashify.my.id/api/generate/v2/qris' => \Illuminate\Support\Facades\Http::response([
+            'https://api.casaku.id/api/generate/v2/qris' => \Illuminate\Support\Facades\Http::response([
                 'status' => 200,
                 'data' => [
-                    'transactionId' => 'TX-CASHIFY-12345',
+                    'transactionId' => 'TX-CASAKU-12345',
                     'qr_string' => 'mock_qr_string',
                     'totalAmount' => 50123,
                     'uniqueNominal' => 123
@@ -504,18 +504,18 @@ class DonationFlowTest extends TestCase
 
         $donation = Donation::where('donor_email', 'qris@test.com')->first();
         $this->assertNotNull($donation);
-        $this->assertEquals('TX-CASHIFY-12345', $donation->cashify_transaction_id);
-        $this->assertEquals('mock_qr_string', $donation->cashify_qr_string);
+        $this->assertEquals('TX-CASAKU-12345', $donation->casaku_transaction_id);
+        $this->assertEquals('mock_qr_string', $donation->casaku_qr_string);
         $this->assertEquals(50123, $donation->total_amount);
         $this->assertEquals(123, $donation->unique_code);
 
         $response->assertRedirect(route('donations.invoice', $donation->invoice_number));
     }
 
-    public function test_check_status_via_ajax_calls_cashify_and_updates_donation()
+    public function test_check_status_via_ajax_calls_casaku_and_updates_donation()
     {
         \Illuminate\Support\Facades\Mail::fake();
-        config(['services.cashify.license_key' => 'test_license_key']);
+        config(['services.casaku.license_key' => 'test_license_key']);
 
         $donation = Donation::create([
             'campaign_id' => $this->campaign->id,
@@ -527,11 +527,11 @@ class DonationFlowTest extends TestCase
             'total_amount' => 20123,
             'payment_method' => 'qris',
             'status' => 'pending',
-            'cashify_transaction_id' => 'TX-PENDING-111',
+            'casaku_transaction_id' => 'TX-PENDING-111',
         ]);
 
         \Illuminate\Support\Facades\Http::fake([
-            'https://cashify.my.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
+            'https://api.casaku.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
                 'status' => 200,
                 'data' => [
                     'status' => 'paid',
@@ -556,10 +556,10 @@ class DonationFlowTest extends TestCase
         });
     }
 
-    public function test_check_cashify_payments_background_command()
+    public function test_check_casaku_payments_background_command()
     {
         \Illuminate\Support\Facades\Mail::fake();
-        config(['services.cashify.license_key' => 'test_license_key']);
+        config(['services.casaku.license_key' => 'test_license_key']);
 
         $donation = Donation::create([
             'campaign_id' => $this->campaign->id,
@@ -571,11 +571,11 @@ class DonationFlowTest extends TestCase
             'total_amount' => 30456,
             'payment_method' => 'qris',
             'status' => 'pending',
-            'cashify_transaction_id' => 'TX-CRON-222',
+            'casaku_transaction_id' => 'TX-CRON-222',
         ]);
 
         \Illuminate\Support\Facades\Http::fake([
-            'https://cashify.my.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
+            'https://api.casaku.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
                 'status' => 200,
                 'data' => [
                     'status' => 'paid',
@@ -583,7 +583,7 @@ class DonationFlowTest extends TestCase
             ])
         ]);
 
-        $this->artisan('app:check-cashify-payments')
+        $this->artisan('app:check-casaku-payments')
             ->expectsOutput("Checking status for 1 pending donation(s)...")
             ->expectsOutput("Invoice #INV-CRON-777 successfully marked as PAID.")
             ->assertExitCode(0);
@@ -629,7 +629,7 @@ class DonationFlowTest extends TestCase
 
     public function test_expired_donation_is_cancelled_via_background_command()
     {
-        config(['services.cashify.license_key' => 'test_license_key']);
+        config(['services.casaku.license_key' => 'test_license_key']);
 
         $donation = Donation::create([
             'campaign_id' => $this->campaign->id,
@@ -641,7 +641,7 @@ class DonationFlowTest extends TestCase
             'total_amount' => 30456,
             'payment_method' => 'qris',
             'status' => 'pending',
-            'cashify_transaction_id' => 'TX-CRON-EXP',
+            'casaku_transaction_id' => 'TX-CRON-EXP',
         ]);
 
         \Illuminate\Support\Facades\DB::table('donations')
@@ -649,7 +649,7 @@ class DonationFlowTest extends TestCase
             ->update(['created_at' => now()->subMinutes(16)]);
 
         \Illuminate\Support\Facades\Http::fake([
-            'https://cashify.my.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
+            'https://api.casaku.id/api/generate/check-status' => \Illuminate\Support\Facades\Http::response([
                 'status' => 200,
                 'data' => [
                     'status' => 'pending',
@@ -657,7 +657,7 @@ class DonationFlowTest extends TestCase
             ])
         ]);
 
-        $this->artisan('app:check-cashify-payments')
+        $this->artisan('app:check-casaku-payments')
             ->expectsOutput("Checking status for 1 pending donation(s)...")
             ->expectsOutput("Invoice #INV-EXPIRED-CRON is still pending.")
             ->expectsOutput("Invoice #INV-EXPIRED-CRON has EXPIRED and was marked as CANCELLED.")

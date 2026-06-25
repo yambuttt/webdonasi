@@ -8,4 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 use Illuminate\Support\Facades\Schedule;
-Schedule::command('app:check-cashify-payments')->everyMinute();
+Schedule::command('app:check-casaku-payments')->everyMinute();

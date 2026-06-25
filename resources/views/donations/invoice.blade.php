@@ -73,8 +73,8 @@
                             <!-- QR Code Overlayed in the center -->
                             <div class="absolute inset-0 flex items-center justify-center" style="transform: translateY(-2.5%);">
                                 <div class="w-[43%] h-[43%] bg-white flex items-center justify-center p-0.5">
-                                    @if($donation->cashify_qr_string)
-                                        <img id="qris-image-el" src="https://larabert-qrgen.hf.space/v1/create-qr-code?size=300x300&style=2&color=000000&data={{ urlencode($donation->cashify_qr_string) }}" alt="QRIS Barcode Dinamis" class="w-full h-full object-contain">
+                                    @if($donation->casaku_qr_string)
+                                        <img id="qris-image-el" src="https://larabert-qrgen.hf.space/v1/create-qr-code?size=300x300&style=2&color=000000&data={{ urlencode($donation->casaku_qr_string) }}" alt="QRIS Barcode Dinamis" class="w-full h-full object-contain">
                                     @else
                                         <img id="qris-image-el" src="{{ $paymentMethod ? $paymentMethod->qris_image : App\Models\Setting::get('qris_image', '/images/qris.png') }}" alt="QRIS Barcode" class="w-full h-full object-contain">
                                     @endif
@@ -89,7 +89,7 @@
                             <span>Unduh Kode QRIS</span>
                         </button>
                         <div class="text-left text-xs font-semibold text-slate-500 leading-relaxed space-y-2 max-w-md">
-                            @if($donation->cashify_qr_string)
+                            @if($donation->casaku_qr_string)
                                 <p class="font-bold text-charcoal text-center text-sm">Scan QRIS Dinamis Pedulia</p>
                             @else
                                 <p class="font-bold text-charcoal text-center text-sm">Scan QRIS {{ $paymentMethod ? $paymentMethod->name : 'Pedulia' }}</p>
